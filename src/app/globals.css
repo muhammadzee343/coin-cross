@@ -1,0 +1,201 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap");
+
+@layer base {
+  @font-face {
+    font-family: "Amalta";
+    src: url("/fonts/Amalta.woff2") format("woff2"),
+      url("/fonts/Amalta.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Futura";
+    src: url("/fonts/FuturaBT-Light.woff2") format("woff2"),
+      url("/fonts/FuturaBT-Light.woff") format("woff");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Futura";
+    src: url("/fonts/FuturaBT-Book.woff2") format("woff2"),
+      url("/fonts/FuturaBT-Book.woff") format("woff");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Futura";
+    src: url("/fonts/FuturaBT-Medium.woff2") format("woff2"),
+      url("/fonts/FuturaBT-Medium.woff2") format("woff");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Futura";
+    src: url("/fonts/Futura-Bold.woff2") format("woff2"),
+      url("/fonts/Futura-Bold.woff") format("woff");
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Futura";
+    src: url("/fonts/Futura-Black-Bold.woff2") format("woff2"),
+      url("/fonts/Futura-Black-Bold.woff") format("woff");
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "Futura";
+    src: url("/fonts/FuturaBT-ExtraBlack.woff2") format("woff2"),
+      url("/fonts/FuturaBT-ExtraBlack.woff") format("woff");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+  }
+}
+
+:root {
+  /* Telegram theme colors */
+  --tg-theme-bg-color: #ffffff;
+  --tg-theme-text-color: #000000;
+  --tg-theme-hint-color: #999999;
+  --tg-theme-link-color: #2481cc;
+  --tg-theme-button-color: #2481cc;
+  --tg-theme-button-text-color: #ffffff;
+  --tg-theme-secondary-bg-color: #f1f1f1;
+
+  /* Add your theme.ts colors as CSS variables */
+  --primary-main: #ff2d55;
+  --primary-light: #c3c3c3;
+  --primary-dark: #1c1b1c;
+  --primary-white: #ffffff;
+  --primary-black: #000000;
+  --primary-green: #0cb951;
+  --primary-lightGray: #575656;
+  --primary-gray: #8e8e93;
+  /* --primary-gray-tabs: rgba(120, 120, 128, 0.161); */
+  --primary-gray-tabs: #404040;
+
+  --secondary-dark: #f88345;
+  --secondary-greenButton: #34c759;
+  --secondary-gray: #909190;
+  --secondary-addButton: #cc7204;
+
+  --background-default: #2e2e2e;
+  --background-card: #000;
+  --background-red: #e8052e;
+  --background-redish-brown: #5f1e1e;
+  --background-redish-brown-dark: #300b0b;
+  --background-copper: #be774f;
+  --background-dark-brown: #532f1b;
+  --background-green: #449c32;
+  --background-dark-green: #2f4933;
+
+  --text-primary: #111827;
+  --text-primary-light: #8e8e93;
+  --text-secondary: #4b5563;
+  --text-green: #0cb951;
+
+  --error: #ef4444;
+  --warning: #f59e0b;
+  --success: #10b981;
+
+  /* Font family */
+  --font-amalta: "Amalta", sans-serif;
+  --font-futura: "Futura", sans-serif;
+  --font-inter: "Inter", sans-serif;
+
+  /* Fixed dimensions */
+  --safe-area-top: env(safe-area-inset-top);
+  --safe-area-bottom: env(safe-area-inset-bottom);
+  /* --max-width: 390px; */
+}
+
+/* Base styles */
+body {
+  /* Use Telegram's theme variables */
+  /* background: var(--tg-theme-bg-color); */
+  color: var(--tg-theme-text-color);
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh; /* Modern viewport height unit */
+  min-height: -webkit-fill-available; /* iOS height fix */
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  font-size: 16px;
+  font-family: var(--font-amalta);
+  -webkit-font-smoothing: antialiased; /* Better text rendering */
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Telegram-specific styles */
+@layer components {
+  .tg-card {
+    @apply rounded-lg bg-white p-4 shadow-sm;
+    background: var(--tg-theme-secondary-bg-color);
+  }
+
+  .tg-button {
+    @apply w-full rounded-lg px-4 py-3 text-center font-medium active:opacity-70 transition-opacity;
+    background: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+  }
+
+  .tg-link {
+    @apply no-underline;
+    color: var(--tg-theme-link-color);
+  }
+
+  .tg-hint {
+    color: var(--tg-theme-hint-color);
+    @apply text-sm;
+  }
+
+  /* Header styles */
+  .tg-header {
+    @apply sticky top-0 z-10 px-4 py-3;
+    padding-top: calc(var(--safe-area-top) + 0.75rem);
+    background: var(--tg-theme-bg-color);
+  }
+
+  /* Bottom navigation */
+  .tg-bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 bg-white border-t px-4 py-3;
+    padding-bottom: calc(var(--safe-area-bottom) + 0.75rem);
+    background: var(--tg-theme-bg-color);
+  }
+
+  /* Content area */
+  .tg-content {
+    @apply flex-1 px-4 py-3 space-y-4;
+    min-height: calc(100vh - 120px);
+  }
+
+  /* List items */
+  .tg-list-item {
+    @apply flex items-center px-4 py-3 active:bg-black/5;
+    background: var(--tg-theme-secondary-bg-color);
+  }
+}
+
+/* custom styles */
+.moonbag-action-tab {
+  background-color: var(--primary-gray-tabs);
+  padding: 12px;
+  gap: 5px;
+}
