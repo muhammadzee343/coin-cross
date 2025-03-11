@@ -28,41 +28,77 @@ export const AddSolanaQR = ({
       alert("Web Share API not supported on this browser.");
       return;
     }
-
+  
     try {
       const qrSize = 300;
       const padding = 20;
       const fontSize = 20;
-      const totalHeight = qrSize + padding + fontSize * 2;
-
+      const maxWidth = qrSize; 
+  
       const canvas = document.createElement("canvas");
-      canvas.width = qrSize + padding * 2;
-      canvas.height = totalHeight;
       const ctx = canvas.getContext("2d");
-
+  
       if (!ctx) return;
-
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+  
+      const wrapText = (
+        context: CanvasRenderingContext2D,
+        text: string,
+        x: number,
+        y: number,
+        maxWidth: number,
+        lineHeight: number
+      ) => {
+        const words = text.split(""); 
+        let line = "";
+        const lines: string[] = [];
+  
+        for (const char of words) {
+          const testLine = line + char;
+          const testWidth = context.measureText(testLine).width;
+  
+          if (testWidth > maxWidth) {
+            lines.push(line);
+            line = char;
+          } else {
+            line = testLine;
+          }
+        }
+        lines.push(line);
+  
+        lines.forEach((l, index) => {
+          context.fillText(l, x, y + index * lineHeight);
+        });
+  
+        return lines.length * lineHeight;
+      };
+  
       const qrImage = new Image();
       qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${walletAddress}`;
       qrImage.crossOrigin = "anonymous";
-
+  
       qrImage.onload = async () => {
-        ctx.drawImage(qrImage, padding, padding, qrSize, qrSize);
-
         ctx.font = `${fontSize}px Arial`;
+        const textHeight = wrapText(ctx, walletAddress, padding, 0, maxWidth, fontSize * 1.5);
+  
+        const totalHeight = qrSize + padding * 3 + textHeight;
+        canvas.width = qrSize + padding * 2;
+        canvas.height = totalHeight;
+  
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+        ctx.drawImage(qrImage, padding, padding, qrSize, qrSize);
+  
         ctx.fillStyle = "#000000";
         ctx.textAlign = "center";
-        ctx.fillText(walletAddress, canvas.width / 2, qrSize + padding * 2);
-
+        ctx.font = `${fontSize}px Arial`;
+  
+        wrapText(ctx, walletAddress, canvas.width / 2, qrSize + padding * 2, maxWidth, fontSize * 1.5);
+  
         canvas.toBlob(async (blob) => {
           if (!blob) return;
-          const file = new File([blob], "solana_wallet_qr.png", {
-            type: "image/png",
-          });
-
+          const file = new File([blob], "solana_wallet_qr.png", { type: "image/png" });
+  
           await navigator.share({
             title: "My Solana Wallet",
             text: `Here is my Solana wallet address: ${walletAddress}`,

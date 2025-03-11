@@ -2,16 +2,19 @@
 
 import React from "react";
 import Image from "next/image";
-
+import { CoinTypes } from "@/types/coins";
 interface CoinCardProps {
+  card: CoinTypes;
   imageUrl: string;
   title: string;
   children?: React.ReactNode;
 }
 export const CoinCard: React.FC<CoinCardProps> = ({
+  card,
   imageUrl,
   title,
 }: CoinCardProps) => {
+  console.log(card , "card ");
   return (
     <>
       <div className="flex items-center p-2 bg-primary-dark rounded-[24px] shadow mb-2">

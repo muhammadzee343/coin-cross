@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import HeartIcon from "../../../public/assets/svg/HeartIcon";
 import { SwipeableCardStack } from "@/components/ui/SwipeableCardStack";
 import SkipCoinIcon from "../../../public/assets/svg/SkipIcon";
@@ -11,6 +11,8 @@ const DegenScreen = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [removedCards, setRemovedCards] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isAllDataFetched, setIsAllDataFetched] = useState(false);
+  const currentIndexRef = useRef(currentIndex);
 
   const {
     coins,
@@ -22,50 +24,89 @@ const DegenScreen = () => {
     resetCoins,
   } = useFetchCoins();
 
+  // Track index changes
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    currentIndexRef.current = currentIndex;
+  }, [currentIndex]);
+
+  // Detect end of list
+  useEffect(() => {
+    if (!hasMore && coins.length > 0 && currentIndex >= coins.length - 1) {
+      setIsAllDataFetched(true);
+    }
+  }, [currentIndex, coins.length, hasMore]);
+
+  // Initial fetch
+  useEffect(() => {
+    const fetchInitial = () => {
       const userId = localStorage.getItem("userId");
       const userToken = localStorage.getItem("jwtToken");
-      if (userId !== null && userToken != null) {
+      if (userId && userToken) {
         fetchNewCoins(userId, [], 5, userToken);
       }
-    }
+    };
+    
+    if (typeof window !== "undefined") fetchInitial();
   }, [fetchNewCoins]);
 
   const handleSwipe = (direction: "left" | "right" | "up" | "down") => {
-    setRemovedCards([...removedCards, coins[currentIndex].coinId]);
-  
-    if (direction === "right") {
-      if (typeof window !== "undefined") {
-        const storedCoins = JSON.parse(localStorage.getItem("likedCoins") || "[]");
-  
-        const isAlreadyLiked = storedCoins.some(
-          (coin: any) => coin.coinId === coins[currentIndex].coinId
-        );
-  
-        if (!isAlreadyLiked) {
-          const updatedCoins = [...storedCoins, coins[currentIndex]];
-          localStorage.setItem("likedCoins", JSON.stringify(updatedCoins));
-        }
+    const currentCoinId = coins[currentIndexRef.current].coinId;
+    const updatedRemoved = [...removedCards, currentCoinId];
+    
+    setRemovedCards(updatedRemoved);
+    setCurrentIndex(prev => Math.min(prev + 1, coins.length - 1));
+
+    // Check if we need to fetch more
+    if (
+      currentIndexRef.current >= coins.length - 2 &&
+      hasMore &&
+      !loading
+    ) {
+      const userId = localStorage.getItem("userId");
+      const userToken = localStorage.getItem("jwtToken");
+      if (userId && userToken) {
+        fetchNextCoins(userId, updatedRemoved, 5, userToken);
       }
     }
-  
-    if (currentIndex < coins.length - 1) {
-      setCurrentIndex((prevIndex) => prevIndex + 1);
-    }
-  
-    if (currentIndex >= coins.length - 2 && hasMore) {
-      if (typeof window !== "undefined") {
-        const userId = localStorage.getItem("userId");
-        const userToken = localStorage.getItem("jwtToken");
-        if (userId !== null && userToken != null) {
-          fetchNextCoins(userId, removedCards, 5, userToken);
-        }
+
+    // Handle like
+    if (direction === "right") {
+      const storedCoins = JSON.parse(localStorage.getItem("likedCoins") || "[]");
+      if (!storedCoins.some((c: any) => c.coinId === currentCoinId)) {
+        localStorage.setItem("likedCoins", 
+          JSON.stringify([...storedCoins, coins[currentIndexRef.current]])
+        );
       }
     }
   };
-  
+
+  const handleRestart = () => {
+    const userId = localStorage.getItem("userId");
+    const userToken = localStorage.getItem("jwtToken");
+    
+    setCurrentIndex(0);
+    setRemovedCards([]);
+    setIsAllDataFetched(false);
+    resetCoins();
+    
+    if (userId && userToken) {
+      fetchNewCoins(userId, [], 5, userToken);
+    }
+  };
+
   return (
+    isAllDataFetched ? (
+      <div className="text-center mt-4">
+        <p className="text-lg font-bold">All coins fetched!</p>
+        <button
+          onClick={handleRestart}
+          className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg"
+        >
+          Start Over
+        </button>
+      </div>
+    )
+  :
     <div className="flex flex-col justify-between h-full flex-1">
       <div className="min-h-[50vh]">
         {coins.length > 0 && (

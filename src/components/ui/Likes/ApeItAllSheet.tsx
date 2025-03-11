@@ -4,28 +4,29 @@ import React, { useState, useEffect } from "react";
 import { Slider } from "../Slider";
 import { Typography } from "../Typography";
 import { Inter } from "next/font/google";
-import { usePrepareBuy } from "@/lib/customHooks/usePrepareBuy";
 import { PublicKey } from "@solana/web3.js";
-import { useExecuteBuy } from "@/lib/customHooks/useExecuteBuy";
 import { BottomSheet } from "../BottomSheet";
 import { AddSolanaQR } from "../AddSolanaQR";
-import { usePrepareSell } from "@/lib/customHooks/usePrepareSell";
-import { useExecuteSell } from "@/lib/customHooks/useExecuteSell";
 import { useRefreshPortfolio } from "@/lib/customHooks/useProfolio";
 import { lamportsToSol } from "@/utils/lamportsToSol";
-
+import { usePurchase } from "@/lib/customHooks/useTradeCoin";
+import { ApeItSheetProps } from "@/types/likes/apeItSheetProps";
 
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400"],
 });
 
-interface ApeItAllSheetProps {
-  mints: string[];
-  isCoinDump?: boolean;
-}
-
-export const ApeItAllSheet = ({ mints, isCoinDump }: ApeItAllSheetProps) => {
+export const ApeItAllSheet = ({
+  mints,
+  isCoinDump,
+  setCurrentTab,
+  setDetailsOpen,
+  setApeItAllOpen,
+  setIsTradeObserved,
+}: ApeItSheetProps) => {
+  const { initiatePurchase, initiateSell } = usePurchase();
+  const { data, fetchPortfolio } = useRefreshPortfolio();
   const [sliderValue, setSliderValue] = useState<number>(5);
   const [amount, setAmount] = useState<number>(sliderValue * mints.length);
   const [sellPercentage, setSellPercentage] = useState<number>(
@@ -36,19 +37,13 @@ export const ApeItAllSheet = ({ mints, isCoinDump }: ApeItAllSheetProps) => {
   const [amountInUSD, setAmountInUSD] = useState<number>(0);
   const [showSolanaWalletQR, setShowSolanaWalletQR] = useState<boolean>(false);
   const [publicKey, setPublicKey] = useState<PublicKey | null>(null);
-  const [userId, setUserId] = useState<string>("");
   const [token, setToken] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [purchaseInProgress, setPurchaseInProgress] = useState<boolean>(false);
 
-  const { initiatePurchase } = usePrepareBuy();
-  const { completePurchase } = useExecuteBuy();
-  const { initiateSell } = usePrepareSell();
-  const { completeSell } = useExecuteSell();
-  const { loading, data, error, fetchPortfolio } = useRefreshPortfolio();
-  
   useEffect(() => {
     if (typeof window !== "undefined") {
       setPublicKey(new PublicKey(localStorage.getItem("publicKey") || ""));
-      setUserId(localStorage.getItem("userId") || "");
       setToken(localStorage.getItem("jwtToken"));
     }
   }, []);
@@ -58,51 +53,58 @@ export const ApeItAllSheet = ({ mints, isCoinDump }: ApeItAllSheetProps) => {
     setSellPercentage(sliderValue * mints.length);
   }, [sliderValue, mints.length]);
 
-  const handleBuy = async () => {
-    if (!publicKey || !token) return;
-    try {
-      const prepareBuyResponse = await initiatePurchase(
-        publicKey.toBase58(),
-        mints,
-        amount,
-        token
-      );
+  const showError = (message: string) => {
+    setErrorMessage(message);
+    setTimeout(() => {
+      setErrorMessage(null);
+    }, 3000);
+  };
 
-      if (prepareBuyResponse?.transactions) {
-        const signedTransactions = prepareBuyResponse.transactions;
-        await completePurchase(
-          signedTransactions,
-          userId,
-          publicKey.toBase58(),
-          token
-        );
+  const handlePurchase = async () => {
+    try {
+      if (!publicKey || !token) throw new Error("Connect wallet first");
+      setPurchaseInProgress(true);
+      await initiatePurchase(mints, amount, publicKey.toBase58(), token);
+      const storedMints = JSON.parse(
+        localStorage.getItem("likedCoins") || "[]"
+      );
+      const updatedMints = storedMints.filter(
+        (mint: { mintAddress: string }) =>
+          !mints.some((m) => m.mintAddress === mint.mintAddress)
+      );
+      localStorage.setItem("purchasedMints", JSON.stringify(updatedMints));
+      if (setCurrentTab) {
+        setCurrentTab("moonbag");
       }
-    } catch (err) {
-      console.error("Error during purchase:", err);
+    } catch (err: any) {
+      showError(err.message);
+    } finally {
+      setPurchaseInProgress(false);
+      if (setIsTradeObserved) {
+        setIsTradeObserved(true);
+      }
+      if (setDetailsOpen) {
+        setDetailsOpen(false);
+      }
     }
   };
 
   const handleSell = async () => {
-    if (!publicKey || !token) return;
     try {
-      const prepareSellResponse = await initiateSell(
-        publicKey.toBase58(),
-        mints,
-        sellPercentage,
-        token
-      );
-
-      if (prepareSellResponse?.transactions) {
-        const signedTransactions = prepareSellResponse.transactions;
-        await completeSell(
-          signedTransactions,
-          userId,
-          publicKey.toBase58(),
-          token
-        );
+      if (!publicKey || !token) throw new Error("Connect wallet first");
+      await initiateSell(publicKey.toBase58(), mints, sellPercentage, token);
+    } catch (err: any) {
+      showError(err.message);
+    } finally {
+      if (setIsTradeObserved) {
+        setIsTradeObserved(true);
       }
-    } catch (err) {
-      console.error("Error during sell:", err);
+      if (setApeItAllOpen) {
+        setApeItAllOpen(false);
+      }
+      if (setDetailsOpen) {
+        setDetailsOpen(false);
+      }
     }
   };
 
@@ -114,21 +116,36 @@ export const ApeItAllSheet = ({ mints, isCoinDump }: ApeItAllSheetProps) => {
     if (publicKey && token) {
       fetchPortfolio(publicKey.toBase58(), token);
     }
-  }, [publicKey, token]);
-
+  }, []);
+  
   useEffect(() => {
-    if (data?.solBalanceInLamports !== undefined && data?.solPriceUSD !== undefined) {
+    if (
+      data?.solBalanceInLamports !== undefined &&
+      data?.solPriceUSD !== undefined
+    ) {
       setSolBalance(lamportsToSol(data.solBalanceInLamports));
-      setUSDPrice(data.solPriceUSD)
+      setUSDPrice(data.solPriceUSD);
     }
   }, [data]);
 
   useEffect(() => {
     setAmountInUSD(Number((solBalance * USDPrice).toFixed(2)));
   }, [solBalance, USDPrice]);
-
+ 
   return (
-    <div>
+    <div className="relative">
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="fixed top-0 left-0 w-full bg-red-600 text-white text-center p-3 z-50">
+          {errorMessage}
+        </div>
+      )}
+      {purchaseInProgress && (
+        <div className="fixed top-0 left-0 w-full bg-secondary-greenButton text-white text-center p-3 z-50">
+          Your moonbag is preparing...
+        </div>
+      )}
+
       <div className="flex justify-between mt-8">
         <div className="flex items-center gap-2">
           <Typography variant="caption1" className="text-primary-white">
@@ -148,9 +165,9 @@ export const ApeItAllSheet = ({ mints, isCoinDump }: ApeItAllSheetProps) => {
             onValueChange={(vals: number[]) =>
               isCoinDump ? setSellPercentage(vals[0]) : setSliderValue(vals[0])
             }
-            min={1}
+            min={isCoinDump ? 0.1 : 1}
             max={100}
-            step={1}
+            step={isCoinDump ? 0.1 : 1}
           />
         </div>
       </div>
@@ -158,17 +175,23 @@ export const ApeItAllSheet = ({ mints, isCoinDump }: ApeItAllSheetProps) => {
       <div className="mt-auto pb-6">
         <button
           className={`w-full mb-1 rounded-xl px-[20px] py-[10px] ${
-            amountInUSD > 0 && amountInUSD > amount ? "bg-primary-green" : "bg-[#cc7204]"
+            amountInUSD > 0 && amountInUSD > amount
+              ? "bg-primary-green"
+              : "bg-[#cc7204]"
           }`}
           onClick={
             isCoinDump
               ? handleSell
               : amountInUSD > 0
-              ? handleBuy
+              ? handlePurchase
               : handleAddSolana
           }
         >
-          {isCoinDump ? `Sell ~$${sellPercentage}` : (amountInUSD > 0 && amountInUSD > amount) ? `Purchase ~$${amount}` : "Add Solana"}
+          {isCoinDump
+            ? `Sell ~$${sellPercentage}`
+            : amountInUSD > 0 && amountInUSD > amount
+            ? `Purchase ~$${amount}`
+            : "Add Solana"}
         </button>
       </div>
 

@@ -11,6 +11,7 @@ export const useFetchCoins = () => {
 
   const fetchNewCoins = useCallback(
     (userId: string, swipedCoinIds: string[], limit: number, token: string) => {
+      dispatch(clearCoins()); // Reset before fetching new coins
       dispatch(fetchCoins({ userId, swipedCoinIds, limit, token, page: 1 })); 
     },
     [dispatch]

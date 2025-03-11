@@ -68,10 +68,23 @@ const coinsSlice = createSlice({
       })
       .addCase(fetchCoins.fulfilled, (state, action) => {
         state.loading = false;
-        state.coins = [...state.coins, ...action.payload]; 
-        state.page += 1; 
-        state.hasMore = action.payload.length === action.meta.arg.limit;
+        
+        // For initial fetch (page 1), replace existing coins
+        if (action.meta.arg.page === 1) {
+          state.coins = action.payload;
+        } else {
+          state.coins = [...state.coins, ...action.payload];
+        }
+        
+        state.hasMore = action.payload.length >= action.meta.arg.limit;
+        state.page = action.meta.arg.page + 1;
       })
+      // .addCase(fetchCoins.fulfilled, (state, action) => {
+      //   state.loading = false;
+      //   state.coins = [...state.coins, ...action.payload]; 
+      //   state.page += 1; 
+      //   state.hasMore = action.payload.length === action.meta.arg.limit;
+      // })
       .addCase(fetchCoins.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string || 'Something went wrong';

@@ -8,8 +8,13 @@ import { usdToSol } from "@/utils/UsdToLamports";
 interface WithdrawProps {
   solPriceUSD: number;
   solBalance: number;
+  setIsWithdrawQROpen: (isOpen: boolean) => void;
 }
-export const Withdraw = ({ solPriceUSD, solBalance }: WithdrawProps) => {
+export const Withdraw = ({
+  solPriceUSD,
+  solBalance,
+  setIsWithdrawQROpen,
+}: WithdrawProps) => {
   const [amount, setAmount] = useState("");
   const [isScanQROpen, setIsScanQROpen] = useState(false);
 
@@ -27,7 +32,7 @@ export const Withdraw = ({ solPriceUSD, solBalance }: WithdrawProps) => {
   };
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Backspace") {
@@ -52,9 +57,7 @@ export const Withdraw = ({ solPriceUSD, solBalance }: WithdrawProps) => {
           <p className="text-3xl text-center text-primary-white mb-3">
             {amount || "0"} <span className="text-primary-gray">USD</span>
           </p>
-          <FaArrowDown
-            className="text-xl text-center text-primary-purple text-[14px] mb-1.5"
-          />
+          <FaArrowDown className="text-xl text-center text-primary-purple text-[14px] mb-1.5" />
           <p className="text-lg text-center text-primary-purple">
             {usdToSol(Number(amount), solPriceUSD).toFixed(4) || "0"} SOL
           </p>
@@ -63,7 +66,7 @@ export const Withdraw = ({ solPriceUSD, solBalance }: WithdrawProps) => {
           <div className="flex justify-between w-full mb-8">
             <p className="text-lg text-center text-primary-purple">MAX</p>
             <p className="text-md text-center text-primary-gray">
-              Available SOL {(solBalance).toFixed(4)}
+              Available SOL {solBalance.toFixed(4)}
             </p>
           </div>
           <div className="grid grid-cols-3 gap-6 mb-4 text-center w-full justify-center">
@@ -102,7 +105,12 @@ export const Withdraw = ({ solPriceUSD, solBalance }: WithdrawProps) => {
           showCloseButton={false}
           onClose={() => setIsScanQROpen(false)}
         >
-          <ScanQR amount={amount} amountInSol={usdToSol(Number(amount), solPriceUSD).toFixed(4)}/>
+          <ScanQR
+            amount={amount}
+            amountInSol={usdToSol(Number(amount), solPriceUSD).toFixed(4)}
+            setIsWithdrawQROpen={setIsWithdrawQROpen}
+            setIsScanQROpen={setIsScanQROpen}
+          />
         </BottomSheet>
       </div>
     </div>

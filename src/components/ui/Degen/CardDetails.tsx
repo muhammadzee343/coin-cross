@@ -3,19 +3,22 @@
 import Image from "next/image";
 import React from "react";
 import { CoinDetailCard } from "../CoinDetail/CoinDetailCard";
-import { Button } from "../Button";
 import { Typography } from "../Typography";
-import { CoinTypes } from "@/types/coins";
 import { BottomSheet } from "../BottomSheet";
 import { ApeItAllSheet } from "../Likes/ApeItAllSheet";
+import { CardDetailsProps } from "@/types/degen/CardDetailsProps";
 
-interface CardDetailsProps {
-  card: CoinTypes;
-  setIsOpen: (isOpen: boolean) => void;
-}
-
-export const CardDetails = ({ card, setIsOpen }: CardDetailsProps) => {
+export const CardDetails = ({
+  card,
+  setDetailsOpen,
+  isCoinDump,
+}: CardDetailsProps) => {
   const [apeItAllOpen, setApeItAllOpen] = React.useState(false);
+
+  const handleDump = () => {
+    setApeItAllOpen(true);
+  };
+
   return (
     <div className="relative max-h-[82vh] overflow-y-auto">
       <div className="w-full h-[150px]">
@@ -43,13 +46,22 @@ export const CardDetails = ({ card, setIsOpen }: CardDetailsProps) => {
           </div>
         </div>
 
-        <Button
-          variant="secondary"
-          className="mb-[10px] rounded-xl"
-          onClick={() => setApeItAllOpen(true)}
-        >
-          Pump it
-        </Button>
+        <div className="flex gap-2 mb-[10px]">
+          <button
+            className="w-full rounded-xl bg-secondary-greenButton px-[20px] py-[10px]"
+            onClick={() => setApeItAllOpen(true)}
+          >
+            Pump it
+          </button>
+          {isCoinDump && (
+            <button
+              className="w-full rounded-xl bg-primary-main px-[20px] py-[10px]"
+              onClick={handleDump}
+            >
+              Dump it
+            </button>
+          )}
+        </div>
 
         <CoinDetailCard coin={card} />
 
@@ -71,7 +83,12 @@ export const CardDetails = ({ card, setIsOpen }: CardDetailsProps) => {
         small={true}
         onClose={() => setApeItAllOpen(false)}
       >
-        <ApeItAllSheet mints={[card?.metadata?.mintAddress]}/>
+        <ApeItAllSheet
+          mints={[{ mintAddress: card?.metadata?.mintAddress }]}
+          isCoinDump={isCoinDump}
+          setDetailsOpen={setDetailsOpen}
+          setApeItAllOpen={setApeItAllOpen}
+        />
       </BottomSheet>
     </div>
   );

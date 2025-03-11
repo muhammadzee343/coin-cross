@@ -11,17 +11,22 @@ import { PublicKey } from "@solana/web3.js";
 import { useRefreshPortfolio } from "@/lib/customHooks/useProfolio";
 import PuffLoader from "react-spinners/PuffLoader";
 import { lamportsToSol } from "@/utils/lamportsToSol";
+import { CardDetails } from "@/components/ui/Degen/CardDetails";
 
 const MoonbagScreen = () => {
   const [USDPrice, setUSDPrice] = useState<number>(0);
+  const [isDetailsOpen, setDetailsOpen] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<CoinTypes | null>(null);
   const [openDumpSliderSheet, setOpenDumpSliderSheet] = useState(false);
   const [moongbagCoins, setmoongbagCoins] = useState<CoinTypes[]>([]);
   const [solBalance, setSolBalance] = useState<number>(0);
   const [publicKey, setPublicKey] = useState<PublicKey | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isTradeObserved, setIsTradeObserved] = useState<boolean>(false);
 
   const { loading, data, error, fetchPortfolio } = useRefreshPortfolio();
 
+  console.log(data , "data");
   const handleRefresh = async () => {
     if (!publicKey) return;
     try {
@@ -29,6 +34,11 @@ const MoonbagScreen = () => {
     } catch (err) {
       console.error("Error refreshing portfolio:", err);
     }
+  };
+
+  const openDetails = (card: CoinTypes) => {
+    setSelectedCard(card);
+    setDetailsOpen(true);
   };
 
   useEffect(() => {
@@ -42,12 +52,15 @@ const MoonbagScreen = () => {
     if (publicKey) {
       handleRefresh();
     }
-  }, [publicKey]);
+  }, [publicKey, isTradeObserved]);
 
   useEffect(() => {
-    if (data?.solBalanceInLamports !== undefined && data?.solPriceUSD !== undefined) {
+    if (
+      data?.solBalanceInLamports !== undefined &&
+      data?.solPriceUSD !== undefined
+    ) {
       setSolBalance(lamportsToSol(data.solBalanceInLamports));
-      setUSDPrice(data.solPriceUSD)
+      setUSDPrice(data.solPriceUSD);
     }
     if (data?.coins !== undefined) {
       setmoongbagCoins(data.coins);
@@ -66,7 +79,7 @@ const MoonbagScreen = () => {
             <div className="w-full">
               <div className="flex flex-col items-center justify-center mb-5">
                 <label className="text-primary-white md:text-[40px] text-[32px]">
-                ${(solBalance * USDPrice).toFixed(2)}
+                  ${(solBalance * USDPrice).toFixed(2)}
                 </label>
                 <div className="flex items-baseline gap-2">
                   <label className="text-primary-green">
@@ -95,14 +108,15 @@ const MoonbagScreen = () => {
                 </label>
               </div>
 
-              <ActionTabs solPriceUSD={USDPrice} solBalance={solBalance}/>
+              <ActionTabs solPriceUSD={USDPrice} solBalance={solBalance} />
 
               <div className="flex flex-col items-center justify-center mt-[15px]">
                 <div className="w-full">
                   {moongbagCoins.length > 0 ? (
                     moongbagCoins.map((card) => (
-                      <div key={card.coinId}>
+                      <div key={card.coinId} onClick={() => openDetails(card)}>
                         <CoinCard
+                          card={card}
                           imageUrl={card.metadata.image}
                           title={card.metadata.name}
                         />
@@ -131,6 +145,19 @@ const MoonbagScreen = () => {
           )}
 
           <BottomSheet
+            className="bg-background-card"
+            isOpen={isDetailsOpen}
+            onClose={() => setDetailsOpen(false)}
+          >
+            {selectedCard && (
+              <CardDetails
+                card={selectedCard}
+                setDetailsOpen={setDetailsOpen}
+                isCoinDump={true}
+              />
+            )}
+          </BottomSheet>
+          <BottomSheet
             className="bg-background-default rounded-t-[20px] border-t border-x border-gray-700"
             backdropBlur={true}
             isOpen={openDumpSliderSheet}
@@ -139,8 +166,12 @@ const MoonbagScreen = () => {
             onClose={() => setOpenDumpSliderSheet(false)}
           >
             <ApeItAllSheet
-              mints={moongbagCoins.map((coin) => coin.metadata?.mintAddress)}
+              mints={moongbagCoins.map((coin) => ({
+                mintAddress: coin.metadata?.mintAddress,
+              }))}
               isCoinDump={true}
+              setApeItAllOpen={setOpenDumpSliderSheet}
+              setIsTradeObserved={setIsTradeObserved}
             />
           </BottomSheet>
         </div>

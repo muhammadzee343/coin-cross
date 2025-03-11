@@ -23,7 +23,6 @@ export const SwipeableCardStack = ({
   removedCards,
   handleSwipe,
 }: SwipeableCardStackProps) => {
-  
   return (
     <div className="relative mt-[25px]">
       {/* card container */}
@@ -40,7 +39,6 @@ export const SwipeableCardStack = ({
 
             const isTop = index === currentIndex;
 
-           
             if (!cards || cards.length === 0) {
               return <p>Loading cards...</p>;
             }
@@ -61,11 +59,11 @@ export const SwipeableCardStack = ({
                     imageUrl={card?.metadata?.image}
                     title={card?.metadata?.name}
                     description={card?.metadata?.description}
-                    marketCapValue={card?.coinGeckoData?.marketCapUsd} 
+                    marketCapValue={card?.coinGeckoData?.marketCapUsd}
                     marketCapChange_24h={
                       card?.coinGeckoData?.coinGeckoPoolData?.[0]
                         ?.priceChangeH24 ?? "N/A"
-                    } 
+                    }
                     coinCreated={card?.coinGeckoData?.createdAt}
                     onSwipe={isTop ? handleSwipe : undefined}
                   />
@@ -78,7 +76,7 @@ export const SwipeableCardStack = ({
                     isOpen={isOpen}
                     onClose={() => setIsOpen(false)}
                   >
-                    <CardDetails card={card} setIsOpen={setIsOpen} />
+                    <CardDetails card={card} setDetailsOpen={setIsOpen} />
                   </BottomSheet>
                 </div>
               </div>

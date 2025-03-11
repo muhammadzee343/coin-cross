@@ -10,25 +10,36 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [web3authReady, setWeb3authReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-  const isInitialized = useRef(false);
   const [jwtToken, setJwtToken] = useState<string | null>(null);
+
+  const router = useRouter();
 
   useEffect(() => {
     let isMounted = true;
 
+    // const initWeb3Auth = async () => {
+    //   if (!isInitialized.current && isMounted) {
+    //     try {
+    //       await initializeWeb3Auth();
+    //       setWeb3authReady(true);
+    //       isInitialized.current = true;
+    //     } catch (error) {
+    //       console.error("Error initializing Web3Auth:", error);
+    //     }
+    //   }
+    // };
+
     const initWeb3Auth = async () => {
-      if (!isInitialized.current && isMounted) {
-        try {
-          console.log("Initializing Web3Auth in useEffect...");
-          await initializeWeb3Auth();
+      try {
+        await initializeWeb3Auth();
+        if (isMounted) {
           setWeb3authReady(true);
-          isInitialized.current = true;
-        } catch (error) {
-          console.error("Error initializing Web3Auth:", error);
         }
+      } catch (error) {
+        console.error("Error initializing Web3Auth:", error);
       }
     };
+  
 
     initWeb3Auth();
     
@@ -53,6 +64,7 @@ export default function Login() {
       }
 
       setIsLoading(true);
+      
       const jwtResponse = await loginWithEmail(email);
       
       if (jwtResponse && jwtResponse.jwt) {
@@ -61,7 +73,6 @@ export default function Login() {
           localStorage.setItem("hasAuthToken", "true");
         }
 
-        // Close the loader before redirecting
         setIsLoading(false);
 
         router.replace("/home");
@@ -70,7 +81,7 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Error sending OTP:", error);
-      setIsLoading(false); // Ensure loader closes even on error
+      setIsLoading(false); 
     }
   };
 
@@ -78,7 +89,7 @@ export default function Login() {
     <div className="flex flex-col justify-between h-full flex-1 mt-[25px]">
       <div className="flex flex-row gap-2">
         <FaLessThan className="text-primary-purple" />
-        <p className="md:text-[17px] sm:text-[15px] font-inter font-normal text-primary-purple leading-tight md:pb-8 pb-4">
+        <p className="md:text-[17px] sm:text-[15px] font-inter font-normal text-primary-purple leading-tight md:pb-8 pb-4" onClick={() => router.replace("/")}>
           Back
         </p>
       </div>

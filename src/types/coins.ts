@@ -43,7 +43,7 @@ export interface Metadata {
     address: string;
     priceUsd: string;
     fdvUsd: string;
-    totalReserveUsd: string;
+    totalReserveUsd: number;
     volumeUsd: string;
     marketCapUsd: string;
     createdAt: string;

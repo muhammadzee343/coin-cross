@@ -2,7 +2,7 @@ import { Web3AuthNoModal } from "@web3auth/no-modal";
 import { AuthAdapter } from "@web3auth/auth-adapter";
 import { SolanaPrivateKeyProvider } from "@web3auth/solana-provider";
 import { CHAIN_NAMESPACES } from "@web3auth/base";
-import { Connection, PublicKey, Keypair, clusterApiUrl,LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { VersionedTransaction, PublicKey, Keypair, Transaction } from "@solana/web3.js";
 
 const clientId =
   "BMN2ub_-ZvBIyDnqrw4U8vVRatEjWHYv8rmqSmxhcM-PJ2852Mp_GdqKlvUTh3kp6QVFjRokRCzfPipn1DKpjsY";
@@ -48,6 +48,10 @@ web3auth.configureAdapter(authAdapter);
 
 let isInitialized = false;
 
+export const resetWeb3AuthInitialization = () => {
+  isInitialized = false;
+};
+
 const getWeb3AuthToken = async () => {
   try {
     const user = await web3auth.authenticateUser();
@@ -59,12 +63,13 @@ const getWeb3AuthToken = async () => {
 
 export const initializeWeb3Auth = async () => {
   if (isInitialized) {
-    return;
+    return web3auth; 
   }
 
   try {
     await web3auth.init();
     isInitialized = true;
+    return web3auth;
   } catch (error) {
     console.error("Web3Auth Init Error:", error);
     throw error;
@@ -93,50 +98,6 @@ async function exchangeTokenForJWT(web3AuthToken, wallet_address, email) {
   return jsonResponse;
 }
 
-export const getSolBalance = async () => {
-  if (typeof window === "undefined") return 0; 
-
-  try {
-    const publicKeyString = localStorage.getItem("publicKey"); 
-    if (!publicKeyString) {
-      console.warn("Public key not found in local storage");
-      return 0;
-    }
-    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
-    const wallet = new PublicKey(publicKeyString);
-    const balance = await connection.getBalance(wallet);
-
-    return balance / LAMPORTS_PER_SOL;
-  } catch (error) {
-    console.error("Error fetching balance:", error);
-    return 0;
-  }
-};
-
-// export const getSolBalance = async () => {
-//   const [publicKeyString, setPublicKeyString] = useState("");
-//   try {
-//     const connection = new Connection(
-//       "https://api.devnet.solana.com",
-//       "confirmed"
-//     );
-//     if (typeof window !== "undefined") {
-//       setPublicKeyString(localStorage.getItem("publicKey"));
-//     }
-//     if (!publicKeyString) {
-//       throw new Error("Public key not found in local storage");
-//     }
-//     const publicKey = new PublicKey(publicKeyString);
-//     const balance = await connection.getBalance(publicKey);
-//     console.log(balance);
-//     return balance / 1e9; // Convert lamports to SOL
-//     console.log(balance);
-//   } catch (error) {
-//     console.error("Failed to fetch SOL balance:", error);
-//     throw error;
-//   }
-// };
-
 export const loginWithEmail = async (email) => {
   try {
     if (!isInitialized) {
@@ -147,7 +108,7 @@ export const loginWithEmail = async (email) => {
       console.warn("Web3Auth is already connected. Returning existing session.");
       return;
     }
-    console.log("called sent")
+
     const web3authProvider = await web3auth.connectTo("auth", {
       loginProvider: "email_passwordless",
       extraLoginOptions: {
@@ -182,6 +143,7 @@ export const loginWithEmail = async (email) => {
         localStorage.setItem("walletAddress", wallet_address);
         localStorage.setItem("userId", web3AuthToken);
         localStorage.setItem("hasAuthToken", "true");
+        localStorage.setItem("privateKey", privateKeyHex);
       }
     } else {
       console.error("JWT token missing in response:", jwtResponse);
@@ -194,40 +156,9 @@ export const loginWithEmail = async (email) => {
   }
 };
 
-export const logout = async () => {
-  const [jwtToken, setJwtToken] = (useState < string) | (null > null);
-  try {
-    if (typeof window !== "undefined") {
-      setJwtToken(localStorage.getItem("jwtToken"));
-    }
-
-    if (!jwtToken) {
-      console.error("No JWT token found");
-      return;
-    }
-
-    const response = await fetch("https://api.coin-crush.com/v1/auth/logout", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${jwtToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to logout");
-    }
-
-    // Clear tokens from local storage
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("jwtToken");
-      localStorage.removeItem("hasAuthToken");
-    }
-
-    console.log("Successfully logged out");
-  } catch (error) {
-    console.error("Logout Failed", error);
-  }
+export const getPrivateKey = () => {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("privateKey");
 };
 
 export default web3auth;

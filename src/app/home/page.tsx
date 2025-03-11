@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { Tabs } from '../../components/ui/Tabs';
-import LikesScreen from '../likes/page';
 import DegenScreen from '../degen/page';
 import MoonbagScreen from '../moonbag/page';
+import { LikesContent } from '@/components/ui/Likes/LikesContent';
 
 
 const tabs = [
@@ -21,9 +21,9 @@ export default function HomePage() {
       case 'degen':
         return <DegenScreen   />;
         case 'likes':
-          return <LikesScreen />;
+          return <LikesContent setCurrentTab={setCurrentTab}/>;
           case 'moonbag':
-            return <MoonbagScreen/>;
+            return <MoonbagScreen />;
       default:
         return <DegenScreen />;
     }

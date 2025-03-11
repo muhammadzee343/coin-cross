@@ -1,22 +1,22 @@
 // lib/store.ts
 import { configureStore } from '@reduxjs/toolkit'
-import counterReducer from './features/counterSlice'
 import coinsReducer from './features/coinsSlice'
-import purchaseReducer from './features/purchaseSlice'
+import purchaseReducer from './features/tradeCoinSlice'
 import portfolioReducer from './features/portfolioSlice'
-
+import authReducer from './features/authSlice'
+import transactionReducer from './features/withdrawTransactionSlice'
 export const makeStore = () => {
   return configureStore({
     reducer: {
-      counter: counterReducer,
       coins: coinsReducer,
       purchase: purchaseReducer,
       portfolio: portfolioReducer,
-    }, // Add your reducers here
+      auth: authReducer,
+      transaction: transactionReducer,
+    },
   })
 }
 
-// Types for better TypeScript support
 export type AppStore = ReturnType<typeof makeStore>
 export type RootState = ReturnType<AppStore['getState']>
 export type AppDispatch = AppStore['dispatch']

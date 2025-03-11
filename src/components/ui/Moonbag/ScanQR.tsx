@@ -10,8 +10,10 @@ import { ReviewTransaction } from "./ReviewTransaction";
 interface ScanQRProps {
   amount: string;
   amountInSol: string;
+  setIsWithdrawQROpen: (isOpen: boolean) => void;
+  setIsScanQROpen: (isOpen: boolean) => void;
 }
-export const ScanQR = ({ amount, amountInSol }: ScanQRProps) => {
+export const ScanQR = ({ amount, amountInSol, setIsWithdrawQROpen, setIsScanQROpen }: ScanQRProps) => {
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   const [walletAddress, setWalletAddress] = useState("");
   const [scannedData, setScannedData] = useState<string | null>(null);
@@ -79,6 +81,8 @@ export const ScanQR = ({ amount, amountInSol }: ScanQRProps) => {
               amount={amount}
               amountInSol={amountInSol}
               walletAddress={walletAddress}
+              setIsWithdrawQROpen={setIsWithdrawQROpen}
+              setIsScanQROpen={setIsScanQROpen}
             />
           </BottomSheet>
         </div>

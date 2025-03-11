@@ -86,7 +86,7 @@ export const ActionTabs = ({ solPriceUSD, solBalance }: ActionTabsProps) => {
           showCloseButton={false}
           onClose={() => setIsWithdrawQROpen(false)}
         >
-          <Withdraw solPriceUSD={solPriceUSD} solBalance={solBalance} />
+          <Withdraw solPriceUSD={solPriceUSD} solBalance={solBalance} setIsWithdrawQROpen={setIsWithdrawQROpen}/>
         </BottomSheet>
       </div>
 
