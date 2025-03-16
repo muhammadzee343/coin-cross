@@ -4,16 +4,15 @@ import { SolanaPrivateKeyProvider } from "@web3auth/solana-provider";
 import { CHAIN_NAMESPACES, WALLET_ADAPTERS, type IProvider } from "@web3auth/base";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
-import { PublicKey } from "@solana/web3.js";
 
 // Type declarations
 declare global {
   interface Window {
-    Telegram?: {
+    Telegram: {
       WebApp: {
         openLink: (url: string) => void;
         close: () => void;
-        platform?: string;
+        platform: string;
       };
     };
   }
@@ -40,11 +39,12 @@ export const web3auth = new Web3AuthNoModal({
   clientId,
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
-  uxMode: "redirect",
-  authMode: "REDIRECT",
-  redirectUrl: typeof window !== "undefined" 
-  ? `${window.location.origin}/auth-callback`
-  : "https://coin-cross.vercel.app/auth-callback",
+  chainConfig
+  // uxMode: "redirect",
+  // authMode: "REDIRECT",
+  // redirectUrl: typeof window !== "undefined" 
+  // ? `${window.location.origin}/auth-callback`
+  // : "https://coin-cross.vercel.app/auth-callback",
 });
 
 const authAdapter = new AuthAdapter({
@@ -54,7 +54,7 @@ const authAdapter = new AuthAdapter({
         verifier: verifierName,
         typeOfLogin: "email_passwordless",
         clientId,
-        verifierIdField: "email",
+        // verifierIdField: "email",
       },
     },
   },
@@ -136,10 +136,9 @@ export const loginWithEmail = async (email: string): Promise<LoginResponse | str
       loginProvider: "email_passwordless",
       extraLoginOptions: {
         login_hint: email.trim(),
-        verifierIdField: "email",
         redirectUrl: typeof window !== "undefined" 
-  ? `${window.location.origin}/auth-callback`
-  : "https://coin-cross.vercel.app/auth-callback",
+          ? `${window.location.origin}/auth-callback`
+          : "https://coin-cross.vercel.app/auth-callback",
         appState: {
           returnTo: window.location.href,
           customState: { action: "otp-verification" },
@@ -149,13 +148,12 @@ export const loginWithEmail = async (email: string): Promise<LoginResponse | str
 
     if (window.Telegram?.WebApp?.platform) {
       await web3auth.connectTo(WALLET_ADAPTERS.AUTH, loginParams);
-      const redirectUrl = web3auth.provider?.redirectUrl;
-      if (!redirectUrl) throw new Error("Missing redirect URL");
-      return redirectUrl;
+      return loginParams.extraLoginOptions.redirectUrl;
     }
 
     const web3authProvider = await web3auth.connectTo(WALLET_ADAPTERS.AUTH, loginParams);
 
+    if (!web3authProvider) throw new Error("Failed to connect to web3auth provider");
     const ed25519PrivKeyHex = await web3authProvider.request({
       method: "private_key",
     });
@@ -163,7 +161,7 @@ export const loginWithEmail = async (email: string): Promise<LoginResponse | str
     if (!ed25519PrivKeyHex) throw new Error("Failed to retrieve private key");
     
     const keyPair = nacl.sign.keyPair.fromSecretKey(
-      Buffer.from(ed25519PrivKeyHex, "hex")
+      Buffer.from(ed25519PrivKeyHex as string, "hex")
     );
     
     const wallet_address = bs58.encode(keyPair.publicKey);
@@ -177,7 +175,7 @@ export const loginWithEmail = async (email: string): Promise<LoginResponse | str
 
     if (typeof window !== "undefined") {
       localStorage.setItem("walletAddress", wallet_address);
-      localStorage.setItem("privateKey", ed25519PrivKeyHex);
+      localStorage.setItem("privateKey", ed25519PrivKeyHex as string);
       localStorage.setItem("publicKey", wallet_address);
       localStorage.setItem("userId", web3AuthToken || "");
       localStorage.setItem("hasAuthToken", "true");

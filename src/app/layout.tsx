@@ -7,7 +7,7 @@ import RootProvider from "./rootProvider";
 export const isTelegramWebView = () => {
   return typeof window !== "undefined" && 
     (window.navigator.userAgent.includes("Telegram") || 
-     window.Telegram?.WebApp?.initData);
+     window.Telegram?.WebApp?.platform);
 };
 
 export const metadata: Metadata = {

@@ -13,7 +13,7 @@ declare global {
       WebApp: {
         openLink: (url: string) => void;
         close: () => void;
-        platform?: string;
+        platform: string;
       };
     };
   }
@@ -92,10 +92,10 @@ export default function Login() {
 
       if (window.Telegram?.WebApp?.openLink) {
         const authUrl = await loginWithEmail(email);
-        window.Telegram.WebApp.openLink(authUrl);
+        window.Telegram.WebApp.openLink(authUrl as string);
       } else {
         const jwtResponse = await loginWithEmail(email);
-        if (jwtResponse?.jwt) {
+        if (typeof jwtResponse !== 'string' && jwtResponse.jwt) {
           localStorage.setItem("jwtToken", jwtResponse.jwt);
           localStorage.setItem("hasAuthToken", "true");
           router.replace("/home");
