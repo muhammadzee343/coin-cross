@@ -1,13 +1,25 @@
 import { Web3AuthNoModal } from "@web3auth/no-modal";
 import { AuthAdapter } from "@web3auth/auth-adapter";
 import { SolanaPrivateKeyProvider } from "@web3auth/solana-provider";
-import { CHAIN_NAMESPACES } from "@web3auth/base";
+import { CHAIN_NAMESPACES, WALLET_ADAPTERS, type IProvider } from "@web3auth/base";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { lamportsToSol } from "./lamportsToSol";
-const clientId =
-  "BMN2ub_-ZvBIyDnqrw4U8vVRatEjWHYv8rmqSmxhcM-PJ2852Mp_GdqKlvUTh3kp6QVFjRokRCzfPipn1DKpjsY";
+import { PublicKey } from "@solana/web3.js";
+
+// Type declarations
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp: {
+        openLink: (url: string) => void;
+        close: () => void;
+        platform?: string;
+      };
+    };
+  }
+}
+
+const clientId = "BMN2ub_-ZvBIyDnqrw4U8vVRatEjWHYv8rmqSmxhcM-PJ2852Mp_GdqKlvUTh3kp6QVFjRokRCzfPipn1DKpjsY";
 const verifierName = "coincrush_agg_verifier";
 
 const chainConfig = {
@@ -24,13 +36,15 @@ const privateKeyProvider = new SolanaPrivateKeyProvider({
   config: { chainConfig },
 });
 
-const web3auth = new Web3AuthNoModal({
+export const web3auth = new Web3AuthNoModal({
   clientId,
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
-  uxMode: "redirect",  // ✅ Important for Telegram WebView
+  uxMode: "redirect",
   authMode: "REDIRECT",
-  redirectUrl: "https://coin-cross.vercel.app/",
+  redirectUrl: typeof window !== "undefined" 
+  ? `${window.location.origin}/auth-callback`
+  : "https://coin-cross.vercel.app/auth-callback",
 });
 
 const authAdapter = new AuthAdapter({
@@ -55,7 +69,7 @@ export const resetWeb3AuthInitialization = () => {
   isInitialized = false;
 };
 
-const getWeb3AuthToken = async () => {
+const getWeb3AuthToken = async (): Promise<string | undefined> => {
   try {
     const user = await web3auth.authenticateUser();
     return user.idToken;
@@ -64,7 +78,7 @@ const getWeb3AuthToken = async () => {
   }
 };
 
-export const initializeWeb3Auth = async () => {
+export const initializeWeb3Auth = async (): Promise<typeof web3auth> => {
   if (isInitialized) return web3auth;
 
   try {
@@ -77,7 +91,16 @@ export const initializeWeb3Auth = async () => {
   }
 };
 
-async function exchangeTokenForJWT(web3AuthToken, wallet_address, email) {
+interface LoginResponse {
+  walletAddress: string;
+  jwt: string;
+}
+
+async function exchangeTokenForJWT(
+  web3AuthToken: string | undefined,
+  wallet_address: string,
+  email: string
+): Promise<LoginResponse> {
   const response = await fetch("https://api.coin-crush.com/v1/auth/token", {
     method: "POST",
     headers: {
@@ -91,50 +114,58 @@ async function exchangeTokenForJWT(web3AuthToken, wallet_address, email) {
   });
 
   if (!response.ok) throw new Error("Token exchange failed");
-  return await response.json();
+  return response.json();
 }
 
-export const loginWithEmail = async (email) => {
+interface LoginResponse {
+  walletAddress: string;
+  jwt: string;
+}
+
+export const loginWithEmail = async (email: string): Promise<LoginResponse | string> => {
   try {
     if (!isInitialized) await initializeWeb3Auth();
-    if (web3auth.status === "connected") return;
+    if (web3auth.status === "connected") return { walletAddress: "", jwt: "" };
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       throw new Error("Invalid email format");
     }
 
-    const web3authProvider = await web3auth
-      .connectTo("auth", {
-        loginProvider: "email_passwordless",
-        extraLoginOptions: {
-          login_hint: email.trim(),
-          verifierIdField: "email",
-          redirectUrl: window.location.origin + "/auth-callback",
-          appState: {
-            returnTo: window.location.href,
-            customState: { action: "otp-verification" },
-          },
+    const loginParams = {
+      loginProvider: "email_passwordless",
+      extraLoginOptions: {
+        login_hint: email.trim(),
+        verifierIdField: "email",
+        redirectUrl: typeof window !== "undefined" 
+  ? `${window.location.origin}/auth-callback`
+  : "https://coin-cross.vercel.app/auth-callback",
+        appState: {
+          returnTo: window.location.href,
+          customState: { action: "otp-verification" },
         },
-      })
-      .catch((error) => {
-        console.error("OTP Flow Error:", error);
-        throw new Error("Failed to initialize OTP verification");
-      });
+      },
+    };
 
-    // Handle OTP verification result
-    if (!web3authProvider) {
-      throw new Error("OTP verification failed - no provider returned");
+    if (window.Telegram?.WebApp?.platform) {
+      await web3auth.connectTo(WALLET_ADAPTERS.AUTH, loginParams);
+      const redirectUrl = web3auth.provider?.redirectUrl;
+      if (!redirectUrl) throw new Error("Missing redirect URL");
+      return redirectUrl;
     }
+
+    const web3authProvider = await web3auth.connectTo(WALLET_ADAPTERS.AUTH, loginParams);
 
     const ed25519PrivKeyHex = await web3authProvider.request({
       method: "private_key",
     });
+    
     if (!ed25519PrivKeyHex) throw new Error("Failed to retrieve private key");
-
+    
     const keyPair = nacl.sign.keyPair.fromSecretKey(
       Buffer.from(ed25519PrivKeyHex, "hex")
     );
+    
     const wallet_address = bs58.encode(keyPair.publicKey);
     const web3AuthToken = await getWeb3AuthToken();
 
@@ -148,20 +179,18 @@ export const loginWithEmail = async (email) => {
       localStorage.setItem("walletAddress", wallet_address);
       localStorage.setItem("privateKey", ed25519PrivKeyHex);
       localStorage.setItem("publicKey", wallet_address);
-      localStorage.setItem("userId", web3AuthToken);
+      localStorage.setItem("userId", web3AuthToken || "");
       localStorage.setItem("hasAuthToken", "true");
     }
 
-    return { walletAddress: wallet_address, jwt: jwtResponse.token };
+    return { walletAddress: wallet_address, jwt: jwtResponse.jwt };
   } catch (error) {
     console.error("Login Failed", error);
     throw error;
   }
 };
 
-export const getPrivateKey = () => {
+export const getPrivateKey = (): string | null => {
   if (typeof window === "undefined") return null;
   return localStorage.getItem("privateKey");
 };
-
-export default web3auth;
