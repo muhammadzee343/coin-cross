@@ -98,7 +98,7 @@ export default function Login() {
       <div className="w-full flex justify-center mt-20">
         <div className="w-[70%]">
           <h1 className="text-center text-[40px] leading-none text-primary-white">
-            Welcome to Coin Crush
+            Welcome to Coin
           </h1>
         </div>
       </div>
