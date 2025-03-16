@@ -3,14 +3,15 @@ import { Input } from "@/components/ui/Input";
 import React, { useEffect, useState, useRef } from "react";
 import { FaLessThan } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import { initializeWeb3Auth, loginWithEmail } from "../../../utils/web3auth";
+import { initializeWeb3Auth, initTelegramWebApp, loginWithEmail } from "../../../utils/web3auth";
 import PuffLoader from "react-spinners/PuffLoader";
-
+import { useAuth } from "@/lib/customHooks/useAuth";
 export default function Login() {
+  const {token} = useAuth();
   const [email, setEmail] = useState("");
   const [web3authReady, setWeb3authReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [jwtToken, setJwtToken] = useState<string | null>(null);
+  // const [jwtToken, setJwtToken] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -29,6 +30,8 @@ export default function Login() {
     //   }
     // };
 
+    initTelegramWebApp();
+    
     const initWeb3Auth = async () => {
       try {
         await initializeWeb3Auth();
@@ -42,13 +45,9 @@ export default function Login() {
 
     initWeb3Auth();
 
-    // Check if user is already authenticated
-    if (typeof window !== "undefined") {
-      setJwtToken(localStorage.getItem("jwtToken"));
-    }
-    if (jwtToken) {
-      router.replace("/home");
-    }
+
+    if (token) router.replace("/home");
+    
 
     return () => {
       isMounted = false;

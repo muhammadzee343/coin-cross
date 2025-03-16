@@ -4,8 +4,7 @@ import { SolanaPrivateKeyProvider } from "@web3auth/solana-provider";
 import { CHAIN_NAMESPACES } from "@web3auth/base";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { lamportsToSol } from "./lamportsToSol";
+
 const clientId =
   "BMN2ub_-ZvBIyDnqrw4U8vVRatEjWHYv8rmqSmxhcM-PJ2852Mp_GdqKlvUTh3kp6QVFjRokRCzfPipn1DKpjsY";
 const verifierName = "coincrush_agg_verifier";
@@ -28,7 +27,7 @@ const web3auth = new Web3AuthNoModal({
   clientId,
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
-  uxMode: "popup",  // ✅ Important for Telegram WebView
+  uxMode: typeof window !== "undefined" && window.Telegram?.WebApp?.isDesktop ? "redirect" : "popup",  // ✅ Important for Telegram WebView
 });
 
 const authAdapter = new AuthAdapter({
@@ -75,7 +74,7 @@ export const initializeWeb3Auth = async () => {
   }
 };
 
-async function exchangeTokenForJWT(web3AuthToken, wallet_address, email) {
+export const exchangeTokenForJWT = async (web3AuthToken, wallet_address, email) => {
   const response = await fetch("https://api.coin-crush.com/v1/auth/token", {
     method: "POST",
     headers: {
@@ -92,6 +91,39 @@ async function exchangeTokenForJWT(web3AuthToken, wallet_address, email) {
   return await response.json();
 }
 
+export const handleRedirect = async () => {
+  if (typeof window === "undefined") return null;
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has("token")) {
+    try {
+      const privateKey = await web3auth.provider?.request({ method: "private_key" });
+      const user = await web3auth.authenticateUser();
+      
+      return {
+        privateKey,
+        idToken: user.idToken,
+        email: user.email,
+      };
+    } catch (error) {
+      console.error("Redirect handling error:", error);
+      return null;
+    }
+  }
+  return null;
+};
+
+export const initTelegramWebApp = () => {
+  if (typeof window === "undefined") return;
+  
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.expand();
+    tg.enableClosingConfirmation();
+    tg.MainButton.setText("Loading...").show();
+  }
+};
+
 export const loginWithEmail = async (email) => {
   try {
     if (!isInitialized) await initializeWeb3Auth();
@@ -102,23 +134,32 @@ export const loginWithEmail = async (email) => {
       throw new Error("Invalid email format");
     }
 
-    const isTelegram = window.Telegram?.WebApp;
-    const isDesktop = isTelegram && !(/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent));
+    // const isTelegram = window.Telegram?.WebApp;
+    // const isDesktop = isTelegram && !(/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent));
+    const isTelegram = typeof window !== "undefined" && window.Telegram?.WebApp;
+  const redirectUrl = isTelegram 
+    ? window.Telegram.WebApp.initDataUnsafe.start_param || window.location.href
+    : window.location.href;
 
     const web3authProvider = await web3auth
       .connectTo("auth", {
         loginProvider: "email_passwordless",
         extraLoginOptions: {
-          login_hint: email.trim(),
-          verifierIdField: "email",
-          redirectUrl: isDesktop 
-            ? window.location.origin + "/auth-callback"
-            : window.location.href,
-          appState: {
-            returnTo: window.location.href,
-          },
-          mfaLevel: "none",
-          sessionTime: 86400
+          login_hint: email,
+      redirectUrl: window.location.origin + "/auth-callback",
+      verifierIdField: "email",
+      mfaLevel: "none",
+      sessionTime: 86400
+          // login_hint: email.trim(),
+          // verifierIdField: "email",
+          // redirectUrl: isDesktop 
+          //   ? window.location.origin + "/auth-callback"
+          //   : window.location.href,
+          // appState: {
+          //   returnTo: window.location.href,
+          // },
+          // mfaLevel: "none",
+          // sessionTime: 86400
         },
       })
       .catch((error) => {
