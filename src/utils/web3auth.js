@@ -151,9 +151,9 @@ export const loginWithEmail = async (email) => {
     if (!emailRegex.test(email)) {
       throw new Error("Invalid email format");
     }
-
+    console.log(window.Telegram?.WebApp?.platform, "platform");
     const isTelegram = typeof window !== "undefined" && window.Telegram?.WebApp;
-    const isDesktop = isTelegram && !(/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent));
+    const isDesktop = window.Telegram?.WebApp?.platform === "tdesktop";
     const redirectUrl = isDesktop
     ? `https://t.me/DevCon19Bot/coins/auth-callback`
     : window.location.href;
@@ -183,6 +183,10 @@ export const loginWithEmail = async (email) => {
         console.error("OTP Flow Error:", error);
         throw new Error("Failed to initialize OTP verification");
       });
+
+      if (isDesktop) {
+        window.location.href = redirectUrl;
+      }
 
     // Handle OTP verification result
     if (!web3authProvider) {

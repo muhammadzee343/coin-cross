@@ -1,48 +1,73 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { handleRedirect } from "@/utils/web3auth";
-import nacl from "tweetnacl";
-import bs58 from "bs58";
-import { exchangeTokenForJWT } from "@/utils/web3auth";
+import { handleRedirect } from "../../utils/web3auth";
+
+declare global {
+  interface Window {
+    Telegram: {
+      WebApp: {
+        platform: string;
+        close: () => void;
+        version: string;
+        setHeaderColor: (color: string) => void;
+        setBackgroundColor: (color: string) => void;
+      };
+    };
+  }
+}
 
 export default function AuthCallback() {
   const router = useRouter();
 
   useEffect(() => {
-    const processLogin = async () => {
+    const processAuth = async () => {
       try {
         const result = await handleRedirect();
-        if (result?.privateKey && result.idToken) {
-          const keyPair = nacl.sign.keyPair.fromSecretKey(
-            Buffer.from(result.privateKey, "hex")
-          );
-          const wallet_address = bs58.encode(keyPair.publicKey);
-
-          const jwtResponse = await exchangeTokenForJWT(
-            result.idToken,
-            wallet_address,
-            result.email || ""
-          );
-
-          localStorage.setItem("walletAddress", wallet_address);
+        
+        if (result?.privateKey) {
+          // Store credentials
           localStorage.setItem("privateKey", result.privateKey);
-          localStorage.setItem("jwtToken", jwtResponse.token);
-          
-          router.push("/home");
+          localStorage.setItem("jwt", result.idToken);
+
+          // Desktop-specific closure
+          if (window.Telegram?.WebApp?.platform === "tdesktop") {
+            // Delay for WebView to register auth completion
+            setTimeout(() => {
+              window.Telegram.WebApp.close();
+              // Force refresh parent window
+              window.opener?.location.reload();
+            }, 500);
+          } else {
+            window.Telegram?.WebApp?.close();
+          }
         }
       } catch (error) {
-        console.error("Authentication failed:", error);
-        router.push("/login");
+        console.error("Auth failed:", error);
+        router.push("/login?error=auth_failed");
       }
     };
 
-    processLogin();
+    processAuth();
   }, [router]);
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <p>Processing authentication...</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
+        <p className="mt-4 text-gray-300">Completing authentication...</p>
+        
+        {/* Desktop fallback close button */}
+        {typeof window !== "undefined" && 
+          window.Telegram?.WebApp?.platform === "tdesktop" && (
+            <button
+              onClick={() => window.Telegram.WebApp.close()}
+              className="mt-4 px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 text-white"
+            >
+              Close Window
+            </button>
+          )}
+      </div>
     </div>
   );
 }
