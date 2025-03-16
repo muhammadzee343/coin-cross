@@ -15,7 +15,7 @@ interface OnboardingSlide {
 
 const slides: OnboardingSlide[] = [
   {
-    title: "Welcome to Coin",
+    title: "Welcome to Coin Crush",
     description: "Discover and invest in curated meme coins with ease.",
     image: <IoGlobeOutline className="text-primary-purple text-[80px]" />,
   },
