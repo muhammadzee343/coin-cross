@@ -29,6 +29,8 @@ const web3auth = new Web3AuthNoModal({
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
   uxMode: "redirect",  // ✅ Important for Telegram WebView
+  authMode: "REDIRECT",
+  redirectUrl: "https://coin-cross.vercel.app/",
 });
 
 const authAdapter = new AuthAdapter({
