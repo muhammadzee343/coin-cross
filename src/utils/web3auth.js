@@ -14,7 +14,7 @@ const chainConfig = {
   chainId: "0x3",
   rpcTarget: "https://api.devnet.solana.com",
   displayName: "Solana Devnet",
-  blockExplorerUrl: "https://explorer.solana.com",
+  blockExplorerUrl: "https://explorer.solana.com/?cluster=devnet",
   ticker: "SOL",
   tickerName: "Solana",
 };
@@ -28,6 +28,14 @@ const web3auth = new Web3AuthNoModal({
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
   uxMode: typeof window !== "undefined" && window.Telegram?.WebApp?.isDesktop ? "redirect" : "popup",  // ✅ Important for Telegram WebView
+  sessionTime: 86400 * 7,
+  whiteLabel: {
+    name: "Coin Crush",
+    defaultLanguage: "en",
+    theme: {
+      primary: "#6C4DEA", // Match Telegram's color scheme
+    }
+  },
 });
 
 const authAdapter = new AuthAdapter({
@@ -116,11 +124,21 @@ export const handleRedirect = async () => {
 export const initTelegramWebApp = () => {
   if (typeof window === "undefined") return;
   
-  const tg = window.Telegram?.WebApp;
-  if (tg) {
+  if (typeof window !== "undefined" && window.Telegram?.WebApp) {
+    const tg = window.Telegram.WebApp;
+    
+    // Critical for Desktop WebView
     tg.expand();
     tg.enableClosingConfirmation();
-    tg.MainButton.setText("Loading...").show();
+    tg.MainButton.hide();
+    
+    // Add version logging
+    console.log('Telegram WebApp version:', tg.version);
+    console.log('Platform:', tg.platform);
+    
+    // Force dark theme
+    tg.setHeaderColor('#6C4DEA');
+    tg.setBackgroundColor('#1A1C22');
   }
 };
 
@@ -134,11 +152,10 @@ export const loginWithEmail = async (email) => {
       throw new Error("Invalid email format");
     }
 
-    // const isTelegram = window.Telegram?.WebApp;
-    // const isDesktop = isTelegram && !(/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent));
     const isTelegram = typeof window !== "undefined" && window.Telegram?.WebApp;
-  const redirectUrl = isTelegram 
-    ? window.Telegram.WebApp.initDataUnsafe.start_param || window.location.href
+    const isDesktop = isTelegram && !(/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent));
+    const redirectUrl = isDesktop
+    ? `https://t.me/DevCon19Bot/coins/auth-callback`
     : window.location.href;
 
     const web3authProvider = await web3auth
@@ -146,7 +163,7 @@ export const loginWithEmail = async (email) => {
         loginProvider: "email_passwordless",
         extraLoginOptions: {
           login_hint: email,
-      redirectUrl: window.location.origin + "/auth-callback",
+      redirectUrl: redirectUrl,
       verifierIdField: "email",
       mfaLevel: "none",
       sessionTime: 86400
