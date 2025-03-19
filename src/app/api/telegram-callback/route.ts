@@ -5,6 +5,16 @@ export const GET = async (req: Request) => {
   const token = searchParams.get('token');
   const email = searchParams.get('email');
 
+  const requiredParams = ['token', 'email', 'provider'];
+  const missingParams = requiredParams.filter(param => !searchParams.get(param));
+  
+  if (missingParams.length > 0) {
+    return NextResponse.json(
+      { error: `Missing parameters: ${missingParams.join(', ')}` },
+      { status: 400 }
+    );
+  }
+
   try {
     if (!token || !email) {
       throw new Error('Missing authentication parameters');
