@@ -68,7 +68,7 @@ export default function Login() {
 
       setIsLoading(true);
 
-       windowRef.current = window.open("", "_blank");
+      //  windowRef.current = window.open("", "_blank");
     
     const jwtResponse = await loginWithEmail(email);
 
