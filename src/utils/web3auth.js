@@ -24,15 +24,13 @@ const privateKeyProvider = new SolanaPrivateKeyProvider({
   config: { chainConfig },
 });
 
-export const isTelegramWebApp = () => {
-  return typeof window !== 'undefined' && window?.Telegram?.WebApp?.initData;
-};
+const isTelegramEnv = typeof window !== 'undefined' && window.Telegram?.WebApp?.initData;
 
 const web3auth = new Web3AuthNoModal({
   clientId,
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
-  uxMode: isTelegramWebApp ? "redirect" : "popup",
+  uxMode: isTelegramEnv ? "redirect" : "popup",
 });
 
 const authAdapter = new AuthAdapter({
@@ -114,11 +112,9 @@ export const loginWithEmail = async (email) => {
       throw new Error("Invalid email format");
     }
 
-    const baseUrl = isTelegramWebApp() 
-      ? "https://coin-cross.vercel.app/" 
-      : window.location.origin;
-
-      const redirectUrl = `${baseUrl}/api/telegram-callback`;
+    const redirectUrl = isTelegramEnv 
+      ? `https://coin-cross.vercel.app/telegram-callback` 
+      : `${window.location.origin}/redirect`;
 
       const extraLoginOptions = {
         login_hint: email.trim(),
@@ -126,7 +122,7 @@ export const loginWithEmail = async (email) => {
         redirectUrl,
       };
 
-      if (isTelegramWebApp) {
+      if (isTelegramEnv) {
         // Open URL using Telegram's mechanism
         window.Telegram.WebApp.openLink(
           `https://auth.web3auth.io/v9/start#${encodeURIComponent(btoa(JSON.stringify(extraLoginOptions)))}`
