@@ -24,11 +24,17 @@ const privateKeyProvider = new SolanaPrivateKeyProvider({
   config: { chainConfig },
 });
 
+const isWebView = () => {
+  const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+  return /FBAN|FBAV|Instagram|LINE|Wechat|Weibo|QQ|Telegram/i.test(userAgent);
+};
+
+
 const web3auth = new Web3AuthNoModal({
   clientId,
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
-  uxMode: "popup",  // ✅ Important for Telegram WebView
+  uxMode: isWebView() ? "redirect" : "popup",
 });
 
 const authAdapter = new AuthAdapter({
@@ -65,14 +71,20 @@ const getWeb3AuthToken = async () => {
 export const initializeWeb3Auth = async () => {
   if (isInitialized) return web3auth;
 
-  try {
-    await web3auth.init();
-    isInitialized = true;
-    return web3auth;
-  } catch (error) {
-    console.error("Web3Auth Init Error:", error);
-    throw error;
+  if (!web3AuthInitPromise) {
+    web3AuthInitPromise = (async () => {
+      try {
+        await web3auth.init();
+        isInitialized = true;
+      } catch (error) {
+        console.error("Web3Auth Init Error:", error);
+        throw error;
+      }
+      return web3auth;
+    })();
   }
+
+  return web3AuthInitPromise;
 };
 
 async function exchangeTokenForJWT(web3AuthToken, wallet_address, email) {
