@@ -28,7 +28,7 @@ const web3auth = new Web3AuthNoModal({
   clientId,
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
-  uxMode: "redirect",  // ✅ Important for Telegram WebView
+  uxMode: "popup",  // ✅ Important for Telegram WebView
 });
 
 const authAdapter = new AuthAdapter({
