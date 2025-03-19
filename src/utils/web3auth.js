@@ -24,12 +24,12 @@ const privateKeyProvider = new SolanaPrivateKeyProvider({
   config: { chainConfig },
 });
 
-console.log("User Agent:", navigator.userAgent);
-   console.log("Using uxMode:", uxMode);
-   
 const isDesktop = /Windows|Macintosh|Linux/.test(navigator.userAgent);
    const uxMode = isDesktop ? "popup" : "redirect";
 
+   console.log("User Agent:", navigator.userAgent);
+   console.log("Using uxMode:", uxMode);
+   
 const web3auth = new Web3AuthNoModal({
   clientId,
   web3AuthNetwork: "sapphire_devnet",
