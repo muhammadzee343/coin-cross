@@ -24,11 +24,13 @@ const privateKeyProvider = new SolanaPrivateKeyProvider({
   config: { chainConfig },
 });
 
+const isTelegramEnv = typeof window !== 'undefined' && window.Telegram?.WebApp?.initData;
+
 const web3auth = new Web3AuthNoModal({
   clientId,
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
-  uxMode: "redirect",
+  uxMode: isTelegramEnv ? "redirect" : "popup",
 });
 
 const authAdapter = new AuthAdapter({
@@ -110,21 +112,40 @@ export const loginWithEmail = async (email) => {
       throw new Error("Invalid email format");
     }
 
+    const redirectUrl = isTelegramEnv 
+      ? `https://your-domain.com/telegram-callback` 
+      : `${window.location.origin}/redirect`;
+
+      const extraLoginOptions = {
+        login_hint: email.trim(),
+        verifierIdField: "email",
+        redirectUrl,
+      };
+
+      if (isTelegramEnv) {
+        // Open URL using Telegram's mechanism
+        window.Telegram.WebApp.openLink(
+          `https://auth.web3auth.io/v9/start#${encodeURIComponent(btoa(JSON.stringify(extraLoginOptions)))}`
+        );
+        return;
+      }
+
     const web3authProvider = await web3auth
       .connectTo("auth", {
         loginProvider: "email_passwordless",
-        extraLoginOptions: {
-          login_hint: email.trim(),
-          verifierIdField: "email",
-          redirectUrl: typeof window !== "undefined" 
-        ? `${window.location.origin}/redirect`
-        : "https://coin-cross.vercel.app/",
-          // redirectUrl: "https://coin-cross.vercel.app/",
-          // appState: {
-          //   returnTo: window.location.href,
-          //   customState: { action: "otp-verification" },
-          // },
-        },
+        extraLoginOptions,
+        // extraLoginOptions: {
+        //   login_hint: email.trim(),
+        //   verifierIdField: "email",
+        //   redirectUrl: typeof window !== "undefined" 
+        // ? `${window.location.origin}/redirect`
+        // : "https://coin-cross.vercel.app/",
+        //   redirectUrl: "https://coin-cross.vercel.app/",
+        //   appState: {
+        //     returnTo: window.location.href,
+        //     customState: { action: "otp-verification" },
+        //   },
+        // },
       })
       .catch((error) => {
         console.error("OTP Flow Error:", error);
