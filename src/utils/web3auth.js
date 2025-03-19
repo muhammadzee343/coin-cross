@@ -10,6 +10,10 @@ const clientId =
   "BMN2ub_-ZvBIyDnqrw4U8vVRatEjWHYv8rmqSmxhcM-PJ2852Mp_GdqKlvUTh3kp6QVFjRokRCzfPipn1DKpjsY";
 const verifierName = "coincrush_agg_verifier";
 
+export const isTelegramWebApp = () => {
+  return typeof window !== "undefined" && window?.Telegram?.WebApp?.initData;
+};
+
 const chainConfig = {
   chainNamespace: CHAIN_NAMESPACES.SOLANA,
   chainId: "0x3",
@@ -24,13 +28,11 @@ const privateKeyProvider = new SolanaPrivateKeyProvider({
   config: { chainConfig },
 });
 
-const isTelegramEnv = typeof window !== 'undefined' && window.Telegram?.WebApp?.initData;
-
 const web3auth = new Web3AuthNoModal({
   clientId,
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
-  uxMode: isTelegramEnv ? "redirect" : "popup",
+  uxMode: isTelegramWebApp() ? "redirect" : "popup",
 });
 
 const authAdapter = new AuthAdapter({
@@ -102,8 +104,30 @@ async function exchangeTokenForJWT(web3AuthToken, wallet_address, email) {
   return await response.json();
 }
 
+// Add Telegram-specific login handler
+// export const loginWithTelegram = async (email) => {
+//   if (!isTelegramWebApp()) throw new Error("Not in Telegram environment");
+  
+//   const baseUrl = "https://coin-cross.vercel.app/";
+//   const redirectUrl = `${baseUrl}/api/telegram-callback`;
+
+//   await new Promise<void>((resolve, reject) => {
+//     window.Telegram.WebApp.CloudStorage.setItem('pending_email', email, (error) => {
+//       if (error) return reject(error);
+//       window.Telegram.WebApp.openLink(
+//         `https://auth.web3auth.io/v9/start#redirectUrl=${encodeURIComponent(redirectUrl)}&login_hint=${email}`
+//       );
+//       resolve();
+//     });
+//   });
+// };
+
 export const loginWithEmail = async (email) => {
   try {
+    // if (isTelegramWebApp()) {
+    //   return loginWithTelegram(email);
+    // }
+
     if (!isInitialized) await initializeWeb3Auth();
     if (web3auth.status === "connected") return;
 
@@ -111,41 +135,37 @@ export const loginWithEmail = async (email) => {
     if (!emailRegex.test(email)) {
       throw new Error("Invalid email format");
     }
+    const baseUrl = isTelegramWebApp() 
+      ? "https://coin-cross.vercel.app/" 
+      : window.location.origin;
 
-    const redirectUrl = isTelegramEnv 
-      ? `https://coin-cross.vercel.app/telegram-callback` 
-      : `${window.location.origin}/redirect`;
+    const redirectUrl = `${baseUrl}/api/telegram-callback`;
 
-      const extraLoginOptions = {
-        login_hint: email.trim(),
-        verifierIdField: "email",
-        redirectUrl,
-      };
-
-      if (isTelegramEnv) {
-        // Open URL using Telegram's mechanism
-        window.Telegram.WebApp.openLink(
-          `https://auth.web3auth.io/v9/start#${encodeURIComponent(btoa(JSON.stringify(extraLoginOptions)))}`
-        );
-        return;
-      }
+    if (isTelegramWebApp()) {
+      // Store email in Telegram's persistent storage
+      window.Telegram.WebApp.CloudStorage.setItem('pending_auth_email', email, (err) => {
+        if (!err) {
+          // Open auth URL using Telegram's native method
+          window.Telegram.WebApp.openLink(
+            `https://auth.web3auth.io/v9/start#redirectUrl=${encodeURIComponent(redirectUrl)}&login_hint=${email}`
+          );
+        }
+      });
+      return;
+    }
 
     const web3authProvider = await web3auth
       .connectTo("auth", {
         loginProvider: "email_passwordless",
-        extraLoginOptions,
-        // extraLoginOptions: {
-        //   login_hint: email.trim(),
-        //   verifierIdField: "email",
-        //   redirectUrl: typeof window !== "undefined" 
-        // ? `${window.location.origin}/redirect`
-        // : "https://coin-cross.vercel.app/",
-        //   redirectUrl: "https://coin-cross.vercel.app/",
-        //   appState: {
-        //     returnTo: window.location.href,
-        //     customState: { action: "otp-verification" },
-        //   },
-        // },
+        extraLoginOptions: {
+          login_hint: email.trim(),
+          verifierIdField: "email",
+          redirectUrl: "https://coin-cross.vercel.app/",
+          appState: {
+            returnTo: window.location.href,
+            customState: { action: "otp-verification" },
+          },
+        },
       })
       .catch((error) => {
         console.error("OTP Flow Error:", error);

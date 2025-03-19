@@ -13,11 +13,10 @@ export default function Login() {
   const [jwtToken, setJwtToken] = useState<string | null>(null);
 
   const router = useRouter();
-  const windowRef = useRef<Window | null>(null);
 
   useEffect(() => {
     let isMounted = true;
-
+    
     const initWeb3Auth = async () => {
       try {
         await initializeWeb3Auth();
@@ -44,21 +43,6 @@ export default function Login() {
     };
   }, [router]);
 
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === "WEB3AUTH_REDIRECT_SUCCESS") {
-        windowRef.current?.close();
-        // Handle successful login
-      } else if (event.data.type === "WEB3AUTH_REDIRECT_ERROR") {
-        console.error("Authentication error:", event.data.error);
-        windowRef.current?.close();
-      }
-    };
-  
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, []);
-
   const sendOtp = async () => {
     try {
       if (!web3authReady) {
@@ -68,9 +52,7 @@ export default function Login() {
 
       setIsLoading(true);
 
-      //  windowRef.current = window.open("", "_blank");
-    
-    const jwtResponse = await loginWithEmail(email);
+      const jwtResponse = await loginWithEmail(email);
 
       if (jwtResponse && jwtResponse.jwt) {
         if (typeof window !== "undefined") {

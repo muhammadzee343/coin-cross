@@ -3,6 +3,8 @@ import "./globals.css";
 import Script from "next/script";
 import StoreProvider from "./StoreProvider";
 import RootProvider from "./rootProvider";
+import ClientProviders from "@/components/ClientProviders";
+
 
 export const metadata: Metadata = {
   title: "Coin Crush",
@@ -18,7 +20,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" /> */}
+      <Script 
+  src="https://telegram.org/js/telegram-web-app.js" 
+  strategy="beforeInteractive" 
+/>
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
@@ -28,7 +33,9 @@ export default function RootLayout({
         <body className="antialiased bg-background-default mx-auto">
         <StoreProvider>
           <RootProvider>
+            <ClientProviders>
             {children}
+            </ClientProviders>
           </RootProvider>
         </StoreProvider>
       </body>
