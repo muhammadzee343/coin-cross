@@ -1,3 +1,4 @@
+"use client"
 import { useRouter } from "next/navigation";
 import HomePage from "./home/page";
 import { useEffect } from "react";
