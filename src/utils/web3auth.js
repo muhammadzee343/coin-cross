@@ -68,6 +68,8 @@ const getWeb3AuthToken = async () => {
   }
 };
 
+let web3AuthInitPromise = null;
+
 export const initializeWeb3Auth = async () => {
   if (isInitialized) return web3auth;
 
