@@ -6,20 +6,6 @@ import { useRouter } from "next/navigation";
 import { initializeWeb3Auth, loginWithEmail } from "../../../utils/web3auth";
 import PuffLoader from "react-spinners/PuffLoader";
 
-declare global {
-  interface Window {
-    Telegram: {
-      WebApp: {
-        platform: string;
-        close: () => void;
-        version: string;
-        setHeaderColor: (color: string) => void;
-        setBackgroundColor: (color: string) => void;
-      };
-    };
-  }
-}
-
 export default function Login() {
   const [email, setEmail] = useState("");
   const [web3authReady, setWeb3authReady] = useState(false);
@@ -71,13 +57,20 @@ export default function Login() {
 
   const sendOtp = async () => {
     try {
+      const popup = window.open("", "_blank");
+    if (!popup || popup.closed) {
+      alert("Please disable popup blockers for this site");
+      return;
+    }
+    popup.close();
       if (!web3authReady) {
         console.error("Web3Auth not initialized yet");
         return;
       }
 
+      
       setIsLoading(true);
-      console.log("Platform:", window.Telegram?.WebApp?.platform);
+
       const jwtResponse = await loginWithEmail(email);
 
       if (jwtResponse && jwtResponse.jwt) {
@@ -86,14 +79,6 @@ export default function Login() {
           localStorage.setItem("hasAuthToken", "true");
         }
 
-        if (window.Telegram?.WebApp?.platform === "tdesktop") {
-          setTimeout(() => {
-            window.Telegram.WebApp.close();
-            window.opener?.location.reload();
-          }, 500);
-        } else {
-          window.Telegram?.WebApp?.close();
-        }
         setIsLoading(false);
 
         router.replace("/home");
