@@ -4,7 +4,8 @@ import { SolanaPrivateKeyProvider } from "@web3auth/solana-provider";
 import { CHAIN_NAMESPACES } from "@web3auth/base";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
-
+import { Connection, PublicKey } from "@solana/web3.js";
+import { lamportsToSol } from "./lamportsToSol";
 const clientId =
   "BMN2ub_-ZvBIyDnqrw4U8vVRatEjWHYv8rmqSmxhcM-PJ2852Mp_GdqKlvUTh3kp6QVFjRokRCzfPipn1DKpjsY";
 const verifierName = "coincrush_agg_verifier";
@@ -14,7 +15,7 @@ const chainConfig = {
   chainId: "0x3",
   rpcTarget: "https://api.devnet.solana.com",
   displayName: "Solana Devnet",
-  blockExplorerUrl: "https://explorer.solana.com/?cluster=devnet",
+  blockExplorerUrl: "https://explorer.solana.com",
   ticker: "SOL",
   tickerName: "Solana",
 };
@@ -27,15 +28,7 @@ const web3auth = new Web3AuthNoModal({
   clientId,
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
-  uxMode: typeof window !== "undefined" && window.Telegram?.WebApp?.isDesktop ? "redirect" : "popup",  // ✅ Important for Telegram WebView
-  sessionTime: 86400 * 7,
-  whiteLabel: {
-    name: "Coin Crush",
-    defaultLanguage: "en",
-    theme: {
-      primary: "#6C4DEA", // Match Telegram's color scheme
-    }
-  },
+  uxMode: "redirect",  // ✅ Important for Telegram WebView
 });
 
 const authAdapter = new AuthAdapter({
@@ -82,7 +75,7 @@ export const initializeWeb3Auth = async () => {
   }
 };
 
-export const exchangeTokenForJWT = async (web3AuthToken, wallet_address, email) => {
+async function exchangeTokenForJWT(web3AuthToken, wallet_address, email) {
   const response = await fetch("https://api.coin-crush.com/v1/auth/token", {
     method: "POST",
     headers: {
@@ -99,49 +92,6 @@ export const exchangeTokenForJWT = async (web3AuthToken, wallet_address, email) 
   return await response.json();
 }
 
-export const handleRedirect = async () => {
-  if (typeof window === "undefined") return null;
-  
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.has("token")) {
-    try {
-      const privateKey = await web3auth.provider?.request({ method: "private_key" });
-      const user = await web3auth.authenticateUser();
-      
-      return {
-        privateKey,
-        idToken: user.idToken,
-        email: user.email,
-      };
-    } catch (error) {
-      console.error("Redirect handling error:", error);
-      return null;
-    }
-  }
-  return null;
-};
-
-export const initTelegramWebApp = () => {
-  if (typeof window === "undefined") return;
-  
-  if (typeof window !== "undefined" && window.Telegram?.WebApp) {
-    const tg = window.Telegram.WebApp;
-    
-    // Critical for Desktop WebView
-    tg.expand();
-    tg.enableClosingConfirmation();
-    tg.MainButton.hide();
-    
-    // Add version logging
-    console.log('Telegram WebApp version:', tg.version);
-    console.log('Platform:', tg.platform);
-    
-    // Force dark theme
-    tg.setHeaderColor('#6C4DEA');
-    tg.setBackgroundColor('#1A1C22');
-  }
-};
-
 export const loginWithEmail = async (email) => {
   try {
     if (!isInitialized) await initializeWeb3Auth();
@@ -151,42 +101,24 @@ export const loginWithEmail = async (email) => {
     if (!emailRegex.test(email)) {
       throw new Error("Invalid email format");
     }
-    console.log(window.Telegram?.WebApp?.platform, "platform");
-    const isTelegram = typeof window !== "undefined" && window.Telegram?.WebApp;
-    const isDesktop = window.Telegram?.WebApp?.platform === "tdesktop";
-    const redirectUrl = isDesktop
-    ? `https://t.me/DevCon19Bot/coins/auth-callback`
-    : window.location.href;
 
     const web3authProvider = await web3auth
       .connectTo("auth", {
         loginProvider: "email_passwordless",
         extraLoginOptions: {
-          login_hint: email,
-      redirectUrl: redirectUrl,
-      verifierIdField: "email",
-      mfaLevel: "none",
-      sessionTime: 86400
-          // login_hint: email.trim(),
-          // verifierIdField: "email",
-          // redirectUrl: isDesktop 
-          //   ? window.location.origin + "/auth-callback"
-          //   : window.location.href,
-          // appState: {
-          //   returnTo: window.location.href,
-          // },
-          // mfaLevel: "none",
-          // sessionTime: 86400
+          login_hint: email.trim(),
+          verifierIdField: "email",
+          redirectUrl: window.location.origin + "/auth-callback",
+          appState: {
+            returnTo: window.location.href,
+            customState: { action: "otp-verification" },
+          },
         },
       })
       .catch((error) => {
         console.error("OTP Flow Error:", error);
         throw new Error("Failed to initialize OTP verification");
       });
-
-      if (isDesktop) {
-        window.location.href = redirectUrl;
-      }
 
     // Handle OTP verification result
     if (!web3authProvider) {

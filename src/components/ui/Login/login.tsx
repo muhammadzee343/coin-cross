@@ -3,15 +3,28 @@ import { Input } from "@/components/ui/Input";
 import React, { useEffect, useState, useRef } from "react";
 import { FaLessThan } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import { initializeWeb3Auth, initTelegramWebApp, loginWithEmail } from "../../../utils/web3auth";
+import { initializeWeb3Auth, loginWithEmail } from "../../../utils/web3auth";
 import PuffLoader from "react-spinners/PuffLoader";
-import { useAuth } from "@/lib/customHooks/useAuth";
+
+declare global {
+  interface Window {
+    Telegram: {
+      WebApp: {
+        platform: string;
+        close: () => void;
+        version: string;
+        setHeaderColor: (color: string) => void;
+        setBackgroundColor: (color: string) => void;
+      };
+    };
+  }
+}
+
 export default function Login() {
-  const {token} = useAuth();
   const [email, setEmail] = useState("");
   const [web3authReady, setWeb3authReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // const [jwtToken, setJwtToken] = useState<string | null>(null);
+  const [jwtToken, setJwtToken] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -30,8 +43,6 @@ export default function Login() {
     //   }
     // };
 
-    initTelegramWebApp();
-    
     const initWeb3Auth = async () => {
       try {
         await initializeWeb3Auth();
@@ -45,9 +56,13 @@ export default function Login() {
 
     initWeb3Auth();
 
-
-    if (token) router.replace("/home");
-    
+    // Check if user is already authenticated
+    if (typeof window !== "undefined") {
+      setJwtToken(localStorage.getItem("jwtToken"));
+    }
+    if (jwtToken) {
+      router.replace("/home");
+    }
 
     return () => {
       isMounted = false;
@@ -62,7 +77,7 @@ export default function Login() {
       }
 
       setIsLoading(true);
-
+      console.log("Platform:", window.Telegram?.WebApp?.platform);
       const jwtResponse = await loginWithEmail(email);
 
       if (jwtResponse && jwtResponse.jwt) {
@@ -71,6 +86,14 @@ export default function Login() {
           localStorage.setItem("hasAuthToken", "true");
         }
 
+        if (window.Telegram?.WebApp?.platform === "tdesktop") {
+          setTimeout(() => {
+            window.Telegram.WebApp.close();
+            window.opener?.location.reload();
+          }, 500);
+        } else {
+          window.Telegram?.WebApp?.close();
+        }
         setIsLoading(false);
 
         router.replace("/home");
