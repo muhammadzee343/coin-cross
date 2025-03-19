@@ -24,17 +24,11 @@ const privateKeyProvider = new SolanaPrivateKeyProvider({
   config: { chainConfig },
 });
 
-const isWebView = () => {
-  const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-  return /FBAN|FBAV|Instagram|LINE|Wechat|Weibo|QQ|Telegram/i.test(userAgent);
-};
-
-
 const web3auth = new Web3AuthNoModal({
   clientId,
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
-  uxMode: isWebView() ? "redirect" : "popup",
+  uxMode: "redirect",
 });
 
 const authAdapter = new AuthAdapter({
@@ -122,7 +116,7 @@ export const loginWithEmail = async (email) => {
         extraLoginOptions: {
           login_hint: email.trim(),
           verifierIdField: "email",
-          redirectUrl: window.location.origin + "/auth-callback",
+          redirectUrl: "https://coin-cross.vercel.app/",
           appState: {
             returnTo: window.location.href,
             customState: { action: "otp-verification" },
