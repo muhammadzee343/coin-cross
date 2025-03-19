@@ -6,24 +6,7 @@ import { useRouter } from "next/navigation";
 import { initializeWeb3Auth, loginWithEmail } from "../../../utils/web3auth";
 import PuffLoader from "react-spinners/PuffLoader";
 
-declare global {
-  interface Window {
-    Telegram: {
-      WebApp: {
-        platform: string;
-        close: () => void;
-        version: string;
-        setHeaderColor: (color: string) => void;
-        setBackgroundColor: (color: string) => void;
-        ready: () => void;
-        enableClosingConfirmation: () => void;
-        onEvent: (event: string, callback: () => void) => void;
-        expand: () => void;
-        offEvent: (event: string) => void;
-      };
-    };
-  }
-}
+
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -32,39 +15,6 @@ export default function Login() {
   const [jwtToken, setJwtToken] = useState<string | null>(null);
 
   const router = useRouter();
-
-  const MiniAppHandler = () => {
-    const router = useRouter();
-  
-    useEffect(() => {
-      if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
-        // Clear mini app state on initial load
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.setHeaderColor('#your_color');
-        window.Telegram.WebApp.enableClosingConfirmation();
-  
-        // Add viewport change handler
-        window.Telegram.WebApp.onEvent('viewportChanged', () => {
-          // Force reload when viewport changes (simulates restart)
-          router.replace('/?cache=' + Date.now());
-        });
-  
-        // Check for fresh start
-        if (!sessionStorage.getItem('miniAppRestarted')) {
-          sessionStorage.setItem('miniAppRestarted', 'true');
-          window.Telegram.WebApp.expand();
-        }
-      }
-  
-      return () => {
-        if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
-          window.Telegram.WebApp.offEvent('viewportChanged');
-        }
-      };
-    }, [router]);
-  
-    return null;
-  };
 
   useEffect(() => {
     let isMounted = true;
@@ -143,7 +93,6 @@ export default function Login() {
 
   return (
     <div className="flex flex-col justify-between h-full flex-1 mt-[25px]">
-      <MiniAppHandler />
       <div className="flex flex-row gap-2">
         <FaLessThan className="text-primary-purple" />
         <p
