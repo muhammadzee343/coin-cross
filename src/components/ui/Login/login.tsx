@@ -55,20 +55,15 @@ export default function Login() {
     };
   }, [router]);
 
+  const isPopupBlocked = (error: unknown): boolean => {
+    return (
+      error instanceof Error && 
+      /(popup closed|blocked)/i.test(error.message)
+    );
+  };
+  
   const sendOtp = async () => {
     try {
-      const popup = window.open("", "_blank");
-    if (!popup || popup.closed) {
-      alert("Please disable popup blockers for this site");
-      return;
-    }
-    popup.close();
-      if (!web3authReady) {
-        console.error("Web3Auth not initialized yet");
-        return;
-      }
-
-      
       setIsLoading(true);
 
       const jwtResponse = await loginWithEmail(email);
@@ -88,6 +83,9 @@ export default function Login() {
     } catch (error) {
       console.error("Error sending OTP:", error);
       setIsLoading(false);
+      if (isPopupBlocked(error)) {
+        alert("Please disable popup blockers for this site");
+      }
     }
   };
 

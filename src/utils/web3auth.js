@@ -29,6 +29,7 @@ const web3auth = new Web3AuthNoModal({
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
   uxMode: "popup",  
+  sessionTime: 3600,
 });
 
 const authAdapter = new AuthAdapter({
@@ -103,6 +104,16 @@ export const loginWithEmail = async (email) => {
       throw new Error("Invalid email format");
     }
 
+    // Initiate the authentication flow
+    web3auth.connectTo("auth", {
+      loginProvider: "email_passwordless",
+      extraLoginOptions: {
+        login_hint: email.trim(),
+        verifierIdField: "email",
+        redirectUrl: window.location.origin + "/auth-callback",
+      },
+    });
+    
     return new Promise((resolve, reject) => {
       const handleMessage = async (event) => {
         if (event.origin !== window.location.origin) return;
@@ -142,16 +153,6 @@ export const loginWithEmail = async (email) => {
       };
 
       window.addEventListener("message", handleMessage);
-
-      // Initiate the authentication flow
-      web3auth.connectTo("auth", {
-        loginProvider: "email_passwordless",
-        extraLoginOptions: {
-          login_hint: email.trim(),
-          verifierIdField: "email",
-          redirectUrl: window.location.origin + "/auth-callback",
-        },
-      });
     });
   } catch (error) {
     console.error("Login Failed", error);
