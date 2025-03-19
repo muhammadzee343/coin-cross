@@ -28,8 +28,7 @@ const web3auth = new Web3AuthNoModal({
   clientId,
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
-  uxMode: "popup",  
-  sessionTime: 3600,
+  uxMode: "redirect",  // ✅ Important for Telegram WebView
 });
 
 const authAdapter = new AuthAdapter({
@@ -98,62 +97,60 @@ export const loginWithEmail = async (email) => {
     if (!isInitialized) await initializeWeb3Auth();
     if (web3auth.status === "connected") return;
 
-    
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       throw new Error("Invalid email format");
     }
 
-    // Initiate the authentication flow
-    web3auth.connectTo("auth", {
-      loginProvider: "email_passwordless",
-      extraLoginOptions: {
-        login_hint: email.trim(),
-        verifierIdField: "email",
-        redirectUrl: window.location.origin + "/auth-callback",
-      },
-    });
-    
-    return new Promise((resolve, reject) => {
-      const handleMessage = async (event) => {
-        if (event.origin !== window.location.origin) return;
-        
-        if (event.data.type === "WEB3AUTH_REDIRECT") {
-          try {
-            const web3authProvider = await web3auth.handleRedirectResult(event.data.data.url);
-            
-            // Rest of your existing login logic...
-            const ed25519PrivKeyHex = await web3authProvider.request({ method: "private_key" });
-            // ... existing code ...
+    const web3authProvider = await web3auth
+      .connectTo("auth", {
+        loginProvider: "email_passwordless",
+        extraLoginOptions: {
+          login_hint: email.trim(),
+          verifierIdField: "email",
+          redirectUrl: window.location.origin + "/auth-callback",
+          appState: {
+            returnTo: window.location.href,
+            customState: { action: "otp-verification" },
+          },
+        },
+      })
+      .catch((error) => {
+        console.error("OTP Flow Error:", error);
+        throw new Error("Failed to initialize OTP verification");
+      });
 
-            const keyPair = nacl.sign.keyPair.fromSecretKey(
-              Buffer.from(ed25519PrivKeyHex, "hex")
-            );
-            const wallet_address = bs58.encode(keyPair.publicKey);
-            const web3AuthToken = await getWeb3AuthToken();
-        
-            const jwtResponse = await exchangeTokenForJWT(
-              web3AuthToken,
-              wallet_address,
-              email
-            );
-        
-            if (typeof window !== "undefined") {
-              localStorage.setItem("walletAddress", wallet_address);
-              localStorage.setItem("privateKey", ed25519PrivKeyHex);
-              localStorage.setItem("publicKey", wallet_address);
-              localStorage.setItem("userId", web3AuthToken);
-              localStorage.setItem("hasAuthToken", "true");
-            }
-            resolve({ walletAddress: wallet_address, jwt: jwtResponse.token });
-          } catch (error) {
-            reject(error);
-          }
-        }
-      };
+    // Handle OTP verification result
+    if (!web3authProvider) {
+      throw new Error("OTP verification failed - no provider returned");
+    }
 
-      window.addEventListener("message", handleMessage);
+    const ed25519PrivKeyHex = await web3authProvider.request({
+      method: "private_key",
     });
+    if (!ed25519PrivKeyHex) throw new Error("Failed to retrieve private key");
+
+    const keyPair = nacl.sign.keyPair.fromSecretKey(
+      Buffer.from(ed25519PrivKeyHex, "hex")
+    );
+    const wallet_address = bs58.encode(keyPair.publicKey);
+    const web3AuthToken = await getWeb3AuthToken();
+
+    const jwtResponse = await exchangeTokenForJWT(
+      web3AuthToken,
+      wallet_address,
+      email
+    );
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("walletAddress", wallet_address);
+      localStorage.setItem("privateKey", ed25519PrivKeyHex);
+      localStorage.setItem("publicKey", wallet_address);
+      localStorage.setItem("userId", web3AuthToken);
+      localStorage.setItem("hasAuthToken", "true");
+    }
+
+    return { walletAddress: wallet_address, jwt: jwtResponse.token };
   } catch (error) {
     console.error("Login Failed", error);
     throw error;

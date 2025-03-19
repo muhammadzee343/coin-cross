@@ -10,8 +10,6 @@ export const metadata: Metadata = {
     "Coin crush is a platform for trading and investing in cryptocurrencies.",
 };
 
-
-
 export default function RootLayout({
   children,
 }: Readonly<{

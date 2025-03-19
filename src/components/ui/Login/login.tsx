@@ -6,8 +6,6 @@ import { useRouter } from "next/navigation";
 import { initializeWeb3Auth, loginWithEmail } from "../../../utils/web3auth";
 import PuffLoader from "react-spinners/PuffLoader";
 
-
-
 export default function Login() {
   const [email, setEmail] = useState("");
   const [web3authReady, setWeb3authReady] = useState(false);
@@ -57,15 +55,13 @@ export default function Login() {
     };
   }, [router]);
 
-  const isPopupBlocked = (error: unknown): boolean => {
-    return (
-      error instanceof Error && 
-      /(popup closed|blocked)/i.test(error.message)
-    );
-  };
-
   const sendOtp = async () => {
     try {
+      if (!web3authReady) {
+        console.error("Web3Auth not initialized yet");
+        return;
+      }
+
       setIsLoading(true);
 
       const jwtResponse = await loginWithEmail(email);
@@ -85,9 +81,6 @@ export default function Login() {
     } catch (error) {
       console.error("Error sending OTP:", error);
       setIsLoading(false);
-      if (isPopupBlocked(error)) {
-        alert("Please disable popup blockers for this site");
-      }
     }
   };
 
