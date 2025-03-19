@@ -1,38 +1,37 @@
-// app/auth-callback/page.tsx
 "use client";
-
 import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { initializeWeb3Auth, loginWithEmail } from "../../utils/web3auth";
 
-export default function AuthCallback() {
-  const searchParams = useSearchParams();
+export default function AuthRedirect() {
+  const router = useRouter();
 
   useEffect(() => {
-    const handleCallback = async () => {
+    const handleRedirect = async () => {
       try {
-        // Send authentication result back to main window
-        window.opener.postMessage(
-          {
-            type: "WEB3AUTH_REDIRECT",
-            data: {
-              url: window.location.href,
-            },
-          },
-          window.location.origin
-        );
+        await initializeWeb3Auth();
+        
+        if (typeof window !== "undefined" && window.opener) {
+          // Send success message to opener window and close
+          window.opener.postMessage({ type: "WEB3AUTH_REDIRECT_SUCCESS" });
+          window.close();
+        } else {
+          // Fallback for browsers that block window closing
+          router.push("/home");
+        }
       } catch (error) {
-        console.error("Callback handling failed:", error);
-      } finally {
+        console.error("Redirect handling failed:", error);
+        window.opener?.postMessage({ type: "WEB3AUTH_REDIRECT_ERROR", error });
         window.close();
       }
     };
 
-    handleCallback();
-  }, [searchParams]);
+    handleRedirect();
+  }, [router]);
 
   return (
     <div className="flex justify-center items-center h-screen">
-      Processing authentication...
+      <p>Completing authentication...</p>
     </div>
   );
 }

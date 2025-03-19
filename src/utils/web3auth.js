@@ -116,11 +116,14 @@ export const loginWithEmail = async (email) => {
         extraLoginOptions: {
           login_hint: email.trim(),
           verifierIdField: "email",
-          redirectUrl: "https://coin-cross.vercel.app/",
-          appState: {
-            returnTo: window.location.href,
-            customState: { action: "otp-verification" },
-          },
+          redirectUrl: typeof window !== "undefined" 
+        ? `${window.location.origin}/redirect`
+        : "https://coin-cross.vercel.app/",
+          // redirectUrl: "https://coin-cross.vercel.app/",
+          // appState: {
+          //   returnTo: window.location.href,
+          //   customState: { action: "otp-verification" },
+          // },
         },
       })
       .catch((error) => {
