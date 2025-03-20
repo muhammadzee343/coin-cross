@@ -1,7 +1,7 @@
 import { Web3AuthNoModal } from "@web3auth/no-modal";
 import { AuthAdapter } from "@web3auth/auth-adapter";
 import { SolanaPrivateKeyProvider } from "@web3auth/solana-provider";
-import { CHAIN_NAMESPACES } from "@web3auth/base";
+import { CHAIN_NAMESPACES, UX_MODE } from "@web3auth/base";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
 import { Connection, PublicKey } from "@solana/web3.js";
@@ -9,10 +9,6 @@ import { lamportsToSol } from "./lamportsToSol";
 const clientId =
   "BMN2ub_-ZvBIyDnqrw4U8vVRatEjWHYv8rmqSmxhcM-PJ2852Mp_GdqKlvUTh3kp6QVFjRokRCzfPipn1DKpjsY";
 const verifierName = "coincrush_agg_verifier";
-
-export const isTelegramWebApp = () => {
-  return typeof window !== "undefined" && window?.Telegram?.WebApp?.initData;
-};
 
 const chainConfig = {
   chainNamespace: CHAIN_NAMESPACES.SOLANA,
@@ -32,23 +28,20 @@ const web3auth = new Web3AuthNoModal({
   clientId,
   web3AuthNetwork: "sapphire_devnet",
   privateKeyProvider,
-  uxMode: isTelegramWebApp() ? "redirect" : "popup",
 });
 
 const authAdapter = new AuthAdapter({
   adapterSettings: {
+    uxMode: UX_MODE.POPUP,
     loginConfig: {
       [verifierName]: {
         verifier: verifierName,
         typeOfLogin: "email_passwordless",
         clientId,
         verifierIdField: "email",
-        uxMode: isTelegramWebApp() ? "redirect" : "popup",
-        jwtParams: {
-          domain: "https://coin-cross.vercel.app/",
-          verifierIdField: "email",
-        }
+        
       },
+      
     },
   },
   privateKeyProvider,
@@ -71,28 +64,17 @@ const getWeb3AuthToken = async () => {
   }
 };
 
-let web3AuthInitPromise = null;
-
 export const initializeWeb3Auth = async () => {
   if (isInitialized) return web3auth;
 
-  if (typeof window !== 'undefined' && window.location.href.includes('/redirect')) {
-    await web3auth.handleRedirect();
+  try {
+    await web3auth.init();
+    isInitialized = true;
+    return web3auth;
+  } catch (error) {
+    console.error("Web3Auth Init Error:", error);
+    throw error;
   }
-  if (!web3AuthInitPromise) {
-    web3AuthInitPromise = (async () => {
-      try {
-        await web3auth.init();
-        isInitialized = true;
-      } catch (error) {
-        console.error("Web3Auth Init Error:", error);
-        throw error;
-      }
-      return web3auth;
-    })();
-  }
-
-  return web3AuthInitPromise;
 };
 
 async function exchangeTokenForJWT(web3AuthToken, wallet_address, email) {
@@ -114,7 +96,6 @@ async function exchangeTokenForJWT(web3AuthToken, wallet_address, email) {
 
 export const loginWithEmail = async (email) => {
   try {
-
     if (!isInitialized) await initializeWeb3Auth();
     if (web3auth.status === "connected") return;
 
@@ -122,59 +103,19 @@ export const loginWithEmail = async (email) => {
     if (!emailRegex.test(email)) {
       throw new Error("Invalid email format");
     }
-    const baseUrl = isTelegramWebApp() 
-      ? "https://coin-cross.vercel.app/" 
-      : window.location.origin;
-
-    const loginConfig = {
-      loginProvider: "email_passwordless",
-      verifier: verifierName,
-      clientId,
-      redirectUrl: isTelegramWebApp() 
-        ? `${baseUrl}/api/telegram-callback`
-        : `${baseUrl}/redirect`
-    };
-
-    if (isTelegramWebApp()) {
-      // Telegram-specific flow
-      const authParams = {
-        ...loginConfig,
-        loginProvider: "email_passwordless", // Explicitly set provider
-        typeOfLogin: "email_passwordless",
-        login_hint: email,
-        uxMode: "redirect",
-        extraLoginOptions: {
-          domain: "https://your-app-domain.com" // Add if using custom domain
-        }
-      };
-
-      await web3auth.connectTo("email_passwordless", { // Match provider name
-        loginProvider: "email_passwordless",
-        extraLoginOptions: authParams
-      });
-
-      const authUrl = `https://auth.web3auth.io/v9/start#${btoa(JSON.stringify(authParams))}`;
-      window.Telegram.WebApp.openLink(authUrl);
-      return;
-    }
-    
 
     const web3authProvider = await web3auth
       .connectTo("auth", {
         loginProvider: "email_passwordless",
         extraLoginOptions: {
-          ...loginConfig,
-          login_hint: email,
-        }
-        // extraLoginOptions: {
-        //   login_hint: email.trim(),
-        //   verifierIdField: "email",
-        //   redirectUrl: "https://coin-cross.vercel.app/",
-        //   appState: {
-        //     returnTo: window.location.href,
-        //     customState: { action: "otp-verification" },
-        //   },
-        // },
+          login_hint: email.trim(),
+          verifierIdField: "email",
+          redirectUrl: window.location.origin + "/auth-callback",
+          appState: {
+            returnTo: window.location.href,
+            customState: { action: "otp-verification" },
+          },
+        },
       })
       .catch((error) => {
         console.error("OTP Flow Error:", error);
@@ -209,17 +150,6 @@ export const loginWithEmail = async (email) => {
       localStorage.setItem("publicKey", wallet_address);
       localStorage.setItem("userId", web3AuthToken);
       localStorage.setItem("hasAuthToken", "true");
-    }
-
-    if (isTelegramWebApp()) {
-      const authUrl = `https://auth.web3auth.io/v9/start#${btoa(JSON.stringify({
-        ...loginConfig,
-        login_hint: email,
-        typeOfLogin: "email_passwordless",
-        uxMode: "redirect"
-      }))}`;
-
-      window.Telegram.WebApp.openLink(authUrl);
     }
 
     return { walletAddress: wallet_address, jwt: jwtResponse.token };
