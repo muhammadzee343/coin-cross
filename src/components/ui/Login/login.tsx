@@ -10,12 +10,21 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [web3authReady, setWeb3authReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [jwtToken, setJwtToken] = useState<string | null>(null);
   const router = useRouter();
 
+  // ✅ Check sessionStorage for JWT and redirect if user is already logged in
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedToken = sessionStorage.getItem("jwtToken");
+      if (storedToken) {
+        router.replace("/home"); // Redirect to home if token exists
+      }
+    }
+  }, [router]);
+
+  // ✅ Initialize Web3Auth only once when the component mounts
   useEffect(() => {
     let isMounted = true;
-
     if (typeof window !== "undefined") {
       const initWeb3Auth = async () => {
         try {
@@ -25,17 +34,13 @@ export default function Login() {
           console.error("Error initializing Web3Auth:", error);
         }
       };
-
       initWeb3Auth();
-
-      const storedToken = sessionStorage.getItem("jwtToken");
-      setJwtToken(storedToken);
-      if (storedToken) router.replace("/home");
     }
 
-    return () => { isMounted = false };
-  }, [router]);
+    return () => { isMounted = false }; // Cleanup
+  }, []);
 
+  // ✅ Function to handle OTP login
   const sendOtp = async () => {
     try {
       if (!web3authReady) {
@@ -44,14 +49,15 @@ export default function Login() {
       }
 
       setIsLoading(true);
-
       const jwtResponse = await loginWithEmail(email);
 
       if (jwtResponse && jwtResponse.jwt) {
         sessionStorage.setItem("jwtToken", jwtResponse.jwt);
         sessionStorage.setItem("hasAuthToken", "true");
         setIsLoading(false);
-        router.replace("/home");
+
+        // ✅ Force the page to reload after successful login
+        router.replace("/home"); 
       } else {
         throw new Error("Failed to get JWT token");
       }
