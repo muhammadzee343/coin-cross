@@ -4,11 +4,10 @@ import { SolanaPrivateKeyProvider } from "@web3auth/solana-provider";
 import { CHAIN_NAMESPACES, UX_MODE } from "@web3auth/base";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { lamportsToSol } from "./lamportsToSol";
-const clientId =
-  "BMN2ub_-ZvBIyDnqrw4U8vVRatEjWHYv8rmqSmxhcM-PJ2852Mp_GdqKlvUTh3kp6QVFjRokRCzfPipn1DKpjsY";
+
+const clientId = "BMN2ub_-ZvBIyDnqrw4U8vVRatEjWHYv8rmqSmxhcM-PJ2852Mp_GdqKlvUTh3kp6QVFjRokRCzfPipn1DKpjsY";
 const verifierName = "coincrush_agg_verifier";
+const isTelegramWebView = window?.Telegram?.WebApp !== undefined;
 
 const chainConfig = {
   chainNamespace: CHAIN_NAMESPACES.SOLANA,
@@ -32,16 +31,14 @@ const web3auth = new Web3AuthNoModal({
 
 const authAdapter = new AuthAdapter({
   adapterSettings: {
-    uxMode: UX_MODE.POPUP,
+    uxMode: isTelegramWebView ? UX_MODE.REDIRECT : UX_MODE.POPUP, // Use REDIRECT for Telegram Mini Apps
     loginConfig: {
       [verifierName]: {
         verifier: verifierName,
         typeOfLogin: "email_passwordless",
         clientId,
         verifierIdField: "email",
-        
       },
-      
     },
   },
   privateKeyProvider,
@@ -55,15 +52,6 @@ export const resetWeb3AuthInitialization = () => {
   isInitialized = false;
 };
 
-const getWeb3AuthToken = async () => {
-  try {
-    const user = await web3auth.authenticateUser();
-    return user.idToken;
-  } catch (error) {
-    console.error("Failed to get Web3Auth token:", error);
-  }
-};
-
 export const initializeWeb3Auth = async () => {
   if (isInitialized) return web3auth;
 
@@ -74,6 +62,15 @@ export const initializeWeb3Auth = async () => {
   } catch (error) {
     console.error("Web3Auth Init Error:", error);
     throw error;
+  }
+};
+
+const getWeb3AuthToken = async () => {
+  try {
+    const user = await web3auth.authenticateUser();
+    return user.idToken;
+  } catch (error) {
+    console.error("Failed to get Web3Auth token:", error);
   }
 };
 
@@ -104,52 +101,35 @@ export const loginWithEmail = async (email) => {
       throw new Error("Invalid email format");
     }
 
-    const web3authProvider = await web3auth
-      .connectTo("auth", {
-        loginProvider: "email_passwordless",
-        extraLoginOptions: {
-          login_hint: email.trim(),
-          verifierIdField: "email",
-          redirectUrl: window.location.origin + "/auth-callback",
-          appState: {
-            returnTo: window.location.href,
-            customState: { action: "otp-verification" },
-          },
-        },
-      })
-      .catch((error) => {
-        console.error("OTP Flow Error:", error);
-        throw new Error("Failed to initialize OTP verification");
-      });
+    const web3authProvider = await web3auth.connectTo("auth", {
+      loginProvider: "email_passwordless",
+      extraLoginOptions: {
+        login_hint: email.trim(),
+        verifierIdField: "email",
+        redirectUrl: isTelegramWebView ? window.Telegram.WebApp.initDataUnsafe?.start_param || window.location.origin : window.location.origin + "/auth-callback",
+      },
+    });
 
-    // Handle OTP verification result
-    if (!web3authProvider) {
-      throw new Error("OTP verification failed - no provider returned");
-    }
+    if (!web3authProvider) throw new Error("OTP verification failed - no provider returned");
 
     const ed25519PrivKeyHex = await web3authProvider.request({
       method: "private_key",
     });
+
     if (!ed25519PrivKeyHex) throw new Error("Failed to retrieve private key");
 
-    const keyPair = nacl.sign.keyPair.fromSecretKey(
-      Buffer.from(ed25519PrivKeyHex, "hex")
-    );
+    const keyPair = nacl.sign.keyPair.fromSecretKey(Buffer.from(ed25519PrivKeyHex, "hex"));
     const wallet_address = bs58.encode(keyPair.publicKey);
     const web3AuthToken = await getWeb3AuthToken();
 
-    const jwtResponse = await exchangeTokenForJWT(
-      web3AuthToken,
-      wallet_address,
-      email
-    );
+    const jwtResponse = await exchangeTokenForJWT(web3AuthToken, wallet_address, email);
 
     if (typeof window !== "undefined") {
-      localStorage.setItem("walletAddress", wallet_address);
-      localStorage.setItem("privateKey", ed25519PrivKeyHex);
-      localStorage.setItem("publicKey", wallet_address);
-      localStorage.setItem("userId", web3AuthToken);
-      localStorage.setItem("hasAuthToken", "true");
+      sessionStorage.setItem("walletAddress", wallet_address);
+      sessionStorage.setItem("privateKey", ed25519PrivKeyHex);
+      sessionStorage.setItem("publicKey", wallet_address);
+      sessionStorage.setItem("userId", web3AuthToken);
+      sessionStorage.setItem("hasAuthToken", "true");
     }
 
     return { walletAddress: wallet_address, jwt: jwtResponse.token };
@@ -158,10 +138,3 @@ export const loginWithEmail = async (email) => {
     throw error;
   }
 };
-
-export const getPrivateKey = () => {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("privateKey");
-};
-
-export default web3auth;
