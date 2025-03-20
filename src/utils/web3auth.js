@@ -147,18 +147,6 @@ export const loginWithEmail = async (email) => {
       redirectUrl: `${baseUrl}/api/telegram-callback`
     };
 
-    if (isTelegramWebApp()) {
-      const authUrl = `https://auth.web3auth.io/v9/start#${btoa(JSON.stringify({
-        ...loginConfig,
-        login_hint: email,
-        typeOfLogin: "email_passwordless",
-        uxMode: "redirect"
-      }))}`;
-
-      window.Telegram.WebApp.openLink(authUrl);
-      return;
-    }
-
     const web3authProvider = await web3auth
       .connectTo("auth", {
         loginProvider: "email_passwordless",
@@ -210,6 +198,18 @@ export const loginWithEmail = async (email) => {
       localStorage.setItem("publicKey", wallet_address);
       localStorage.setItem("userId", web3AuthToken);
       localStorage.setItem("hasAuthToken", "true");
+    }
+
+    if (isTelegramWebApp()) {
+      const authUrl = `https://auth.web3auth.io/v9/start#${btoa(JSON.stringify({
+        ...loginConfig,
+        login_hint: email,
+        typeOfLogin: "email_passwordless",
+        uxMode: "redirect"
+      }))}`;
+
+      window.Telegram.WebApp.openLink(authUrl);
+      return;
     }
 
     return { walletAddress: wallet_address, jwt: jwtResponse.token };
