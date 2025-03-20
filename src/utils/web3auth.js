@@ -43,7 +43,11 @@ const authAdapter = new AuthAdapter({
         typeOfLogin: "email_passwordless",
         clientId,
         verifierIdField: "email",
-        uxMode: isTelegramWebApp() ? "redirect" : "popup"
+        uxMode: isTelegramWebApp() ? "redirect" : "popup",
+        jwtParams: {
+          domain: "https://coin-cross.vercel.app/",
+          verifierIdField: "email",
+        }
       },
     },
   },
@@ -132,15 +136,24 @@ export const loginWithEmail = async (email) => {
     };
 
     if (isTelegramWebApp()) {
-      // After successful authentication
-      const authUrl = `https://auth.web3auth.io/v9/start#${btoa(JSON.stringify({
+      // Telegram-specific flow
+      const authParams = {
         ...loginConfig,
-        login_hint: email,
+        loginProvider: "email_passwordless", // Explicitly set provider
         typeOfLogin: "email_passwordless",
+        login_hint: email,
         uxMode: "redirect",
-        redirectUrl: `${baseUrl}/api/telegram-callback?email=${encodeURIComponent(email)}`
-      }))}`;
-    
+        extraLoginOptions: {
+          domain: "https://your-app-domain.com" // Add if using custom domain
+        }
+      };
+
+      await web3auth.connectTo("email_passwordless", { // Match provider name
+        loginProvider: "email_passwordless",
+        extraLoginOptions: authParams
+      });
+
+      const authUrl = `https://auth.web3auth.io/v9/start#${btoa(JSON.stringify(authParams))}`;
       window.Telegram.WebApp.openLink(authUrl);
       return;
     }
