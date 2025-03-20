@@ -6,39 +6,90 @@ import { useRouter } from "next/navigation";
 import { initializeWeb3Auth, loginWithEmail } from "../../../utils/web3auth";
 import PuffLoader from "react-spinners/PuffLoader";
 
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: {
+        init: () => void;
+      };
+    };
+  }
+}
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [web3authReady, setWeb3authReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
   const router = useRouter();
 
-  // ✅ Check sessionStorage for JWT and redirect if user is already logged in
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedToken = sessionStorage.getItem("jwtToken");
-      if (storedToken) {
-        router.replace("/home"); // Redirect to home if token exists
+      const url = new URL(window.location.href);
+      const hashParams = url.hash.substring(1); // Remove the '#'
+
+      if (hashParams.startsWith("b64Params=")) {
+        try {
+          const base64String = hashParams.replace("b64Params=", "");
+          const decodedString = atob(base64String);
+          const parsedParams = JSON.parse(decodedString);
+
+          console.log("Decoded Params:", parsedParams); // ✅ Debugging log
+
+          if (parsedParams.sessionId) {
+            sessionStorage.setItem("jwtToken", parsedParams.sessionId);
+            sessionStorage.setItem("hasAuthToken", "true");
+
+            // Clean URL by removing hash and redirect to home
+            window.history.replaceState({}, document.title, "/login");
+            router.replace("/home");
+          }
+        } catch (error) {
+          console.error("Error parsing b64Params:", error);
+        }
       }
     }
-  }, [router]);
-
-  // ✅ Initialize Web3Auth only once when the component mounts
+  }, []);
+  
   useEffect(() => {
     let isMounted = true;
-    if (typeof window !== "undefined") {
-      const initWeb3Auth = async () => {
-        try {
-          await initializeWeb3Auth();
-          if (isMounted) setWeb3authReady(true);
-        } catch (error) {
-          console.error("Error initializing Web3Auth:", error);
+  
+    const initWeb3Auth = async () => {
+      try {
+        await initializeWeb3Auth();
+        if (isMounted) {
+          setWeb3authReady(true);
         }
-      };
-      initWeb3Auth();
-    }
-
-    return () => { isMounted = false }; // Cleanup
-  }, []);
+      } catch (error) {
+        console.error("Error initializing Web3Auth:", error);
+      }
+    };
+  
+    initWeb3Auth();
+  
+    // const initializeTelegram = () => {
+    //   setTimeout(() => {
+    //     if (typeof window !== "undefined" && window.Telegram?.WebApp?.init) {
+    //       try {
+    //         window.Telegram.WebApp.init();
+    //         console.log("Telegram Mini App initialized");
+    //       } catch (error) {
+    //         console.error("Error initializing Telegram Mini App:", error);
+    //       }
+    //     } else {
+    //       console.warn("Telegram WebApp is not available or init() is missing");
+    //     }
+    //   }, 500); // Delay initialization by 500ms
+    // };
+  
+    // initializeTelegram();
+  
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
+  
 
   // ✅ Function to handle OTP login
   const sendOtp = async () => {
@@ -47,17 +98,25 @@ export default function Login() {
         console.error("Web3Auth not initialized yet");
         return;
       }
-
+  
       setIsLoading(true);
+  
       const jwtResponse = await loginWithEmail(email);
-
+  console.log(jwtResponse, "jwtResponse")
       if (jwtResponse && jwtResponse.jwt) {
-        sessionStorage.setItem("jwtToken", jwtResponse.jwt);
-        sessionStorage.setItem("hasAuthToken", "true");
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("jwtToken", jwtResponse.jwt);
+          sessionStorage.setItem("hasAuthToken", "true");
+        }
+  
+        router.replace("/home");
+        
         setIsLoading(false);
-
-        // ✅ Force the page to reload after successful login
-        router.replace("/home"); 
+        // if (window.Telegram?.WebApp) {
+        //   (window.Telegram.WebApp as any).openTelegramLink("http://localhost:3000/home");
+        // } else {
+        //   router.replace("/home");
+        // }
       } else {
         throw new Error("Failed to get JWT token");
       }
@@ -66,6 +125,7 @@ export default function Login() {
       setIsLoading(false);
     }
   };
+  
 
   return (
     <div className="flex flex-col justify-center items-center h-screen">

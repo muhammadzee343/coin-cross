@@ -18,7 +18,7 @@ export default function RootProvider({
   useEffect(() => {
     if (typeof window !== "undefined") {
       const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
-      const storedAuthToken = localStorage.getItem("hasAuthToken");
+      const storedAuthToken = sessionStorage.getItem("hasAuthToken");
 
       setIsFirstTime(!hasSeenOnboarding);
       setHasAuthToken(storedAuthToken ? JSON.parse(storedAuthToken) : false);

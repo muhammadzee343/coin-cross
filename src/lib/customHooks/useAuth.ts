@@ -18,8 +18,8 @@ export const useAuth = () => {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedPublicKey = localStorage.getItem("publicKey");
-      const storedToken = localStorage.getItem("jwtToken");
+      const storedPublicKey = sessionStorage.getItem("publicKey");
+      const storedToken = sessionStorage.getItem("jwtToken");
       
       if (storedPublicKey) {
         setPublicKey(new PublicKey(storedPublicKey));

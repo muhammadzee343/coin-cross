@@ -31,7 +31,8 @@ const web3auth = new Web3AuthNoModal({
 
 const authAdapter = new AuthAdapter({
   adapterSettings: {
-    uxMode: isTelegramWebView ? UX_MODE.REDIRECT : UX_MODE.POPUP, // Use REDIRECT for Telegram Mini Apps
+    uxMode: isTelegramWebView ? UX_MODE.REDIRECT : UX_MODE.POPUP, 
+    // uxMode: UX_MODE.POPUP,
     loginConfig: {
       [verifierName]: {
         verifier: verifierName,
@@ -109,7 +110,7 @@ export const loginWithEmail = async (email) => {
         redirectUrl: isTelegramWebView ? window.Telegram.WebApp.initDataUnsafe?.start_param || window.location.origin : window.location.origin + "/auth-callback",
       },
     });
-
+ 
     if (!web3authProvider) throw new Error("OTP verification failed - no provider returned");
 
     const ed25519PrivKeyHex = await web3authProvider.request({
@@ -121,9 +122,9 @@ export const loginWithEmail = async (email) => {
     const keyPair = nacl.sign.keyPair.fromSecretKey(Buffer.from(ed25519PrivKeyHex, "hex"));
     const wallet_address = bs58.encode(keyPair.publicKey);
     const web3AuthToken = await getWeb3AuthToken();
-
+    
     const jwtResponse = await exchangeTokenForJWT(web3AuthToken, wallet_address, email);
-
+console.log(jwtResponse, "jwtResponse")
     if (typeof window !== "undefined") {
       sessionStorage.setItem("walletAddress", wallet_address);
       sessionStorage.setItem("privateKey", ed25519PrivKeyHex);

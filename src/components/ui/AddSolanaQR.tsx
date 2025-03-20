@@ -12,7 +12,7 @@ export const AddSolanaQR = ({
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setWalletAddress(localStorage.getItem("walletAddress") || "");
+      setWalletAddress(sessionStorage.getItem("walletAddress") || "");
     }
   }, []);
 

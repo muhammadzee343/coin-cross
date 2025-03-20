@@ -39,8 +39,8 @@ const DegenScreen = () => {
   // Initial fetch
   useEffect(() => {
     const fetchInitial = () => {
-      const userId = localStorage.getItem("userId");
-      const userToken = localStorage.getItem("jwtToken");
+      const userId = sessionStorage.getItem("userId");
+      const userToken = sessionStorage.getItem("jwtToken");
       if (userId && userToken) {
         fetchNewCoins(userId, [], 5, userToken);
       }
@@ -62,8 +62,8 @@ const DegenScreen = () => {
       hasMore &&
       !loading
     ) {
-      const userId = localStorage.getItem("userId");
-      const userToken = localStorage.getItem("jwtToken");
+      const userId = sessionStorage.getItem("userId");
+      const userToken = sessionStorage.getItem("jwtToken");
       if (userId && userToken) {
         fetchNextCoins(userId, updatedRemoved, 5, userToken);
       }
@@ -71,7 +71,7 @@ const DegenScreen = () => {
 
     // Handle like
     if (direction === "right") {
-      const storedCoins = JSON.parse(localStorage.getItem("likedCoins") || "[]");
+      const storedCoins = JSON.parse(sessionStorage.getItem("likedCoins") || "[]");
       if (!storedCoins.some((c: any) => c.coinId === currentCoinId)) {
         localStorage.setItem("likedCoins", 
           JSON.stringify([...storedCoins, coins[currentIndexRef.current]])
@@ -81,8 +81,8 @@ const DegenScreen = () => {
   };
 
   const handleRestart = () => {
-    const userId = localStorage.getItem("userId");
-    const userToken = localStorage.getItem("jwtToken");
+    const userId = sessionStorage.getItem("userId");
+    const userToken = sessionStorage.getItem("jwtToken");
     
     setCurrentIndex(0);
     setRemovedCards([]);
