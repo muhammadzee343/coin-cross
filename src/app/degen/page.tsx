@@ -6,8 +6,10 @@ import { SwipeableCardStack } from "@/components/ui/SwipeableCardStack";
 import SkipCoinIcon from "../../../public/assets/svg/SkipIcon";
 import DetailIcon from "../../../public/assets/svg/DetailIcon";
 import { useFetchCoins } from "@/lib/customHooks/useFetchCoins";
+import { useAuth } from "@/lib/customHooks/useAuth";
 
 const DegenScreen = () => {
+  const { token } = useAuth()
   const [currentIndex, setCurrentIndex] = useState(0);
   const [removedCards, setRemovedCards] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -35,12 +37,14 @@ const DegenScreen = () => {
       setIsAllDataFetched(true);
     }
   }, [currentIndex, coins.length, hasMore]);
-
+  console.log(token, "token")
   // Initial fetch
   useEffect(() => {
     const fetchInitial = () => {
       const userId = sessionStorage.getItem("userId");
       const userToken = sessionStorage.getItem("jwtToken");
+      console.log(userId, "userId")
+      
       if (userId && userToken) {
         fetchNewCoins(userId, [], 5, userToken);
       }

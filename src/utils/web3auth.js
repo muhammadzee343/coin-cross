@@ -5,9 +5,11 @@ import { CHAIN_NAMESPACES, UX_MODE } from "@web3auth/base";
 import nacl from "tweetnacl";
 import bs58 from "bs58";
 
-const clientId = "BMN2ub_-ZvBIyDnqrw4U8vVRatEjWHYv8rmqSmxhcM-PJ2852Mp_GdqKlvUTh3kp6QVFjRokRCzfPipn1DKpjsY";
+const clientId =
+  "BMN2ub_-ZvBIyDnqrw4U8vVRatEjWHYv8rmqSmxhcM-PJ2852Mp_GdqKlvUTh3kp6QVFjRokRCzfPipn1DKpjsY";
 const verifierName = "coincrush_agg_verifier";
-const isTelegramWebView = typeof window !== "undefined" && window?.Telegram?.WebApp !== undefined;
+const isTelegramWebView =
+  typeof window !== "undefined" && window?.Telegram?.WebApp !== undefined;
 
 const chainConfig = {
   chainNamespace: CHAIN_NAMESPACES.SOLANA,
@@ -31,7 +33,7 @@ const web3auth = new Web3AuthNoModal({
 
 const authAdapter = new AuthAdapter({
   adapterSettings: {
-    uxMode: isTelegramWebView ? UX_MODE.REDIRECT : UX_MODE.POPUP, 
+    uxMode: isTelegramWebView ? UX_MODE.REDIRECT : UX_MODE.POPUP,
     // uxMode: UX_MODE.POPUP,
     loginConfig: {
       [verifierName]: {
@@ -107,11 +109,12 @@ export const loginWithEmail = async (email) => {
       extraLoginOptions: {
         login_hint: email.trim(),
         verifierIdField: "email",
-        redirectUrl: isTelegramWebView ? window.Telegram.WebApp.initDataUnsafe?.start_param || window.location.origin : window.location.origin + "/auth-callback",
+        // redirectUrl: isTelegramWebView ? window.Telegram.WebApp.initDataUnsafe?.start_param || window.location.origin : window.location.origin + "/auth-callback",
       },
     });
- 
-    if (!web3authProvider) throw new Error("OTP verification failed - no provider returned");
+
+    if (!web3authProvider)
+      throw new Error("OTP verification failed - no provider returned");
 
     const ed25519PrivKeyHex = await web3authProvider.request({
       method: "private_key",
@@ -119,21 +122,34 @@ export const loginWithEmail = async (email) => {
 
     if (!ed25519PrivKeyHex) throw new Error("Failed to retrieve private key");
 
-    const keyPair = nacl.sign.keyPair.fromSecretKey(Buffer.from(ed25519PrivKeyHex, "hex"));
+    const keyPair = nacl.sign.keyPair.fromSecretKey(
+      Buffer.from(ed25519PrivKeyHex, "hex")
+    );
     const wallet_address = bs58.encode(keyPair.publicKey);
     const web3AuthToken = await getWeb3AuthToken();
-    
-    const jwtResponse = await exchangeTokenForJWT(web3AuthToken, wallet_address, email);
-console.log(jwtResponse, "jwtResponse")
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem("walletAddress", wallet_address);
-      sessionStorage.setItem("privateKey", ed25519PrivKeyHex);
-      sessionStorage.setItem("publicKey", wallet_address);
-      sessionStorage.setItem("userId", web3AuthToken);
-      sessionStorage.setItem("hasAuthToken", "true");
-    }
 
-    return { walletAddress: wallet_address, jwt: jwtResponse.token };
+    const jwtResponse = await exchangeTokenForJWT(
+      web3AuthToken,
+      wallet_address,
+      email
+    );
+   
+    // console.log(web3AuthToken, "web3AuthToken")
+    //     if (typeof window !== "undefined") {
+    //       sessionStorage.setItem("walletAddress", wallet_address);
+    //       sessionStorage.setItem("privateKey", ed25519PrivKeyHex);
+    //       sessionStorage.setItem("publicKey", wallet_address);
+    //       sessionStorage.setItem("userId", web3AuthToken);
+    //       sessionStorage.setItem("hasAuthToken", "true");
+    //     }
+
+    return {
+      walletAddress: wallet_address,
+      jwt: jwtResponse.token,
+      privateKey: ed25519PrivKeyHex,
+      publicKey: wallet_address,
+      userId: web3AuthToken
+    };
   } catch (error) {
     console.error("Login Failed", error);
     throw error;
