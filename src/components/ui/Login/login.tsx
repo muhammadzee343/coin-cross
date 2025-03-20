@@ -24,30 +24,30 @@ export default function Login() {
 
   const router = useRouter();
 
-  // useEffect(() => {
-  //   if (typeof window !== "undefined") {
-  //     const url = new URL(window.location.href);
-  //     const hashParams = url.hash.substring(1); 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      const hashParams = url.hash.substring(1); 
 
-  //     if (hashParams.startsWith("b64Params=")) {
-  //       try {
-  //         const base64String = hashParams.replace("b64Params=", "");
-  //         const decodedString = atob(base64String);
-  //         const parsedParams = JSON.parse(decodedString);
+      if (hashParams.startsWith("b64Params=")) {
+        try {
+          const base64String = hashParams.replace("b64Params=", "");
+          const decodedString = atob(base64String);
+          const parsedParams = JSON.parse(decodedString);
 
-  //         if (parsedParams.sessionId) {
-  //           sessionStorage.setItem("jwtToken", parsedParams.sessionId);
-  //           sessionStorage.setItem("hasAuthToken", "true");
+          if (parsedParams.sessionId) {
+            sessionStorage.setItem("jwtToken", parsedParams.sessionId);
+            sessionStorage.setItem("hasAuthToken", "true");
 
-  //           window.history.replaceState({}, document.title, "/login");
-  //           router.replace("/home");
-  //         }
-  //       } catch (error) {
-  //         console.error("Error parsing b64Params:", error);
-  //       }
-  //     }
-  //   }
-  // }, []);
+            window.history.replaceState({}, document.title, "/login");
+            router.replace("/home");
+          }
+        } catch (error) {
+          console.error("Error parsing b64Params:", error);
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
