@@ -1,7 +1,7 @@
-"use client";
+"use client"; // Ensure this runs on the client-side
+
 import { Input } from "@/components/ui/Input";
 import React, { useEffect, useState } from "react";
-import { FaLessThan } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { initializeWeb3Auth, loginWithEmail } from "../../../utils/web3auth";
 import PuffLoader from "react-spinners/PuffLoader";
@@ -11,27 +11,27 @@ export default function Login() {
   const [web3authReady, setWeb3authReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [jwtToken, setJwtToken] = useState<string | null>(null);
-
   const router = useRouter();
 
   useEffect(() => {
     let isMounted = true;
 
-    const initWeb3Auth = async () => {
-      try {
-        await initializeWeb3Auth();
-        if (isMounted) setWeb3authReady(true);
-      } catch (error) {
-        console.error("Error initializing Web3Auth:", error);
-      }
-    };
-
-    initWeb3Auth();
-
     if (typeof window !== "undefined") {
-      setJwtToken(sessionStorage.getItem("jwtToken"));
+      const initWeb3Auth = async () => {
+        try {
+          await initializeWeb3Auth();
+          if (isMounted) setWeb3authReady(true);
+        } catch (error) {
+          console.error("Error initializing Web3Auth:", error);
+        }
+      };
+
+      initWeb3Auth();
+
+      const storedToken = sessionStorage.getItem("jwtToken");
+      setJwtToken(storedToken);
+      if (storedToken) router.replace("/home");
     }
-    if (jwtToken) router.replace("/home");
 
     return () => { isMounted = false };
   }, [router]);
