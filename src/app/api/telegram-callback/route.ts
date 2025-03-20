@@ -1,10 +1,12 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from "next/server";
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { token, email } = req.query;
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const token = searchParams.get("token") || "";
+  const email = searchParams.get("email") || "";
 
-  res.setHeader('Content-Type', 'text/html');
-  res.send(`
+  return new NextResponse(
+    `
     <html>
       <head>
         <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -18,5 +20,9 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         </script>
       </head>
     </html>
-  `);
+    `,
+    {
+      headers: { "Content-Type": "text/html" },
+    }
+  );
 }
