@@ -72,6 +72,9 @@ let web3AuthInitPromise = null;
 export const initializeWeb3Auth = async () => {
   if (isInitialized) return web3auth;
 
+  if (typeof window !== 'undefined' && window.location.href.includes('/redirect')) {
+    await web3auth.handleRedirect();
+  }
   if (!web3AuthInitPromise) {
     web3AuthInitPromise = (async () => {
       try {
@@ -149,26 +152,26 @@ export const loginWithEmail = async (email) => {
         : `${baseUrl}/redirect`
     };
 
-    // if (isTelegramWebApp()) {
-    //   // Telegram-specific flow
-    //   const authParams = {
-    //     ...loginConfig,
-    //     login_hint: email,
-    //     typeOfLogin: "email_passwordless",
-    //     uxMode: "redirect"
-    //   };
+    if (isTelegramWebApp()) {
+      // Telegram-specific flow
+      const authParams = {
+        ...loginConfig,
+        login_hint: email,
+        typeOfLogin: "email_passwordless",
+        uxMode: "redirect"
+      };
 
-    //   // Important: Initialize connection before redirecting
-    //   await web3auth.connectTo("auth", {
-    //     loginProvider: "email_passwordless",
-    //     extraLoginOptions: authParams
-    //   });
+      // Important: Initialize connection before redirecting
+      await web3auth.connectTo("auth", {
+        loginProvider: "email_passwordless",
+        extraLoginOptions: authParams
+      });
 
-    //   // Now open the authentication URL
-    //   const authUrl = `https://auth.web3auth.io/v9/start#${btoa(JSON.stringify(authParams))}`;
-    //   window.Telegram.WebApp.openLink(authUrl);
-    //   return;
-    // }
+      // Now open the authentication URL
+      const authUrl = `https://auth.web3auth.io/v9/start#${btoa(JSON.stringify(authParams))}`;
+      window.Telegram.WebApp.openLink(authUrl);
+      return;
+    }
 
     const web3authProvider = await web3auth
       .connectTo("auth", {
@@ -176,7 +179,6 @@ export const loginWithEmail = async (email) => {
         extraLoginOptions: {
           ...loginConfig,
           login_hint: email,
-          redirectUrl: `${baseUrl}/redirect`
         }
         // extraLoginOptions: {
         //   login_hint: email.trim(),

@@ -10,32 +10,19 @@ export default function RedirectPage() {
   useEffect(() => {
     const handleRedirect = async () => {
       try {
-        await initializeWeb3Auth();
-        const params = new URLSearchParams(window.location.search);
+        const web3auth = await initializeWeb3Auth();
+        await web3auth.handleRedirect();
         
-        if (typeof window !== 'undefined' && window.opener) {
-          window.opener.postMessage({
-            type: 'WEB3AUTH_REDIRECT_SUCCESS',
-            token: params.get('token'),
-            email: params.get('email')
-          });
-          window.close();
-        } else {
-          router.push('/home');
-        }
+        // Rest of your web authentication flow...
+        router.push('/home');
       } catch (error) {
         console.error('Redirect handling failed:', error);
-        window.opener?.postMessage({ type: 'WEB3AUTH_REDIRECT_ERROR', error });
-        window.close();
+        router.push('/login');
       }
     };
 
     handleRedirect();
   }, [router]);
 
-  return (
-    <div className="flex justify-center items-center h-screen">
-      <p>Processing authentication...</p>
-    </div>
-  );
+  return <div>Processing authentication...</div>;
 }
