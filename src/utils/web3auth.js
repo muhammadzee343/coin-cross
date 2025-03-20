@@ -108,29 +108,8 @@ async function exchangeTokenForJWT(web3AuthToken, wallet_address, email) {
   return await response.json();
 }
 
-// Add Telegram-specific login handler
-// export const loginWithTelegram = async (email) => {
-//   if (!isTelegramWebApp()) throw new Error("Not in Telegram environment");
-  
-//   const baseUrl = "https://coin-cross.vercel.app/";
-//   const redirectUrl = `${baseUrl}/api/telegram-callback`;
-
-//   await new Promise<void>((resolve, reject) => {
-//     window.Telegram.WebApp.CloudStorage.setItem('pending_email', email, (error) => {
-//       if (error) return reject(error);
-//       window.Telegram.WebApp.openLink(
-//         `https://auth.web3auth.io/v9/start#redirectUrl=${encodeURIComponent(redirectUrl)}&login_hint=${email}`
-//       );
-//       resolve();
-//     });
-//   });
-// };
-
 export const loginWithEmail = async (email) => {
   try {
-    // if (isTelegramWebApp()) {
-    //   return loginWithTelegram(email);
-    // }
 
     if (!isInitialized) await initializeWeb3Auth();
     if (web3auth.status === "connected") return;
@@ -153,25 +132,19 @@ export const loginWithEmail = async (email) => {
     };
 
     if (isTelegramWebApp()) {
-      // Telegram-specific flow
-      const authParams = {
+      // After successful authentication
+      const authUrl = `https://auth.web3auth.io/v9/start#${btoa(JSON.stringify({
         ...loginConfig,
         login_hint: email,
         typeOfLogin: "email_passwordless",
-        uxMode: "redirect"
-      };
-
-      // Important: Initialize connection before redirecting
-      await web3auth.connectTo("auth", {
-        loginProvider: "email_passwordless",
-        extraLoginOptions: authParams
-      });
-
-      // Now open the authentication URL
-      const authUrl = `https://auth.web3auth.io/v9/start#${btoa(JSON.stringify(authParams))}`;
+        uxMode: "redirect",
+        redirectUrl: `${baseUrl}/api/telegram-callback?email=${encodeURIComponent(email)}`
+      }))}`;
+    
       window.Telegram.WebApp.openLink(authUrl);
       return;
     }
+    
 
     const web3authProvider = await web3auth
       .connectTo("auth", {

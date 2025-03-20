@@ -31,29 +31,26 @@ export default function TelegramProvider({ children }: { children: React.ReactNo
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const tg = window.Telegram.WebApp;
       
-      // Initialize Telegram WebApp
-      tg.ready();
-      tg.expand();
-      tg.enableClosingConfirmation();
-
-      // Handle authentication messages
-      tg.onEvent('webAppDataReceived', (eventData: string) => {
+      const handleEvent = (eventData: string) => {
         try {
           const data = JSON.parse(eventData);
           if (data.token && data.email) {
             localStorage.setItem("jwtToken", data.token);
             localStorage.setItem("userEmail", data.email);
             router.push('/home');
+            tg.close(); // Ensure WebApp closes after handling
           }
         } catch (error) {
           console.error("Token processing failed:", error);
           tg.showAlert("Authentication failed. Please try again.");
+          tg.close();
         }
-      });
-
-      // Cleanup
+      };
+  
+      tg.onEvent('webAppDataReceived', handleEvent);
+  
       return () => {
-        tg.offEvent('webAppDataReceived', () => {});
+        tg.offEvent('webAppDataReceived', handleEvent);
       };
     }
   }, [router]);

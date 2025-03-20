@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/Input";
 import React, { useEffect, useState, useRef } from "react";
 import { FaLessThan } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import { initializeWeb3Auth, loginWithEmail } from "../../../utils/web3auth";
+import { initializeWeb3Auth, isTelegramWebApp, loginWithEmail } from "../../../utils/web3auth";
 import PuffLoader from "react-spinners/PuffLoader";
 
 export default function Login() {
@@ -52,6 +52,13 @@ export default function Login() {
 
       setIsLoading(true);
 
+      if (isTelegramWebApp()) {
+        // Special handling for Telegram WebApp
+        await loginWithEmail(email);
+        // Don't redirect here - wait for webAppDataReceived event
+        setIsLoading(false);
+        return;
+      }
       const jwtResponse = await loginWithEmail(email);
 
       if (jwtResponse && jwtResponse.jwt) {

@@ -1,34 +1,22 @@
-'use client';
+import type { NextApiRequest, NextApiResponse } from 'next';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { initializeWeb3Auth } from '@/utils/web3auth';
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { token, email } = req.query;
 
-export default function TelegramCallback() {
-  const router = useRouter();
-
-  useEffect(() => {
-    const handleTelegramAuth = async () => {
-      try {
-        const web3auth = await initializeWeb3Auth();
-        await web3auth.handleRedirect();
-        
-        const user = await web3auth.authenticateUser();
-        const email = user.email;
-        
-        window.Telegram.WebApp.sendData(JSON.stringify({
-          token: user.idToken,
-          email: email
-        }));
-        window.Telegram.WebApp.close();
-      } catch (error: any) {
-        console.error("Telegram auth failed:", error);
-        window.Telegram.WebApp.showAlert(`Authentication failed: ${error.message}`);
-      }
-    };
-
-    handleTelegramAuth();
-  }, [router]);
-
-  return <div>Processing Telegram authentication...</div>;
+  res.setHeader('Content-Type', 'text/html');
+  res.send(`
+    <html>
+      <head>
+        <script src="https://telegram.org/js/telegram-web-app.js"></script>
+        <script>
+          window.Telegram.WebApp.ready();
+          window.Telegram.WebApp.sendData(JSON.stringify({
+            token: "${token}",
+            email: "${email}"
+          }));
+          setTimeout(() => window.Telegram.WebApp.close(), 500);
+        </script>
+      </head>
+    </html>
+  `);
 }
