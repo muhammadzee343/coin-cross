@@ -29,6 +29,7 @@
     "cssnano": "^7.0.6",
     "eslint": "^9.21.0",
     "framer-motion": "^12.4.7",
+    "js-cookie": "^3.0.5",
     "next": "15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -40,6 +41,7 @@
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
+    "@types/js-cookie": "^3.0.6",
     "@types/node": "^20.11.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

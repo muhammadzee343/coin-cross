@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
 import HeartIcon from "../../../public/assets/svg/HeartIcon";
 import { SwipeableCardStack } from "@/components/ui/SwipeableCardStack";
 import SkipCoinIcon from "../../../public/assets/svg/SkipIcon";
 import DetailIcon from "../../../public/assets/svg/DetailIcon";
 import { useFetchCoins } from "@/lib/customHooks/useFetchCoins";
 import { useAuth } from "@/lib/customHooks/useAuth";
-import { initializeWeb3Auth, loginWithEmail } from "@/utils/web3auth";
+import Cookies from "js-cookie";
 
 const DegenScreen = () => {
   // const { token, userId } = useAuth()
@@ -16,8 +15,6 @@ const DegenScreen = () => {
   const [removedCards, setRemovedCards] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isAllDataFetched, setIsAllDataFetched] = useState(false);
-  const router = useRouter();
-  const [initializing, setInitializing] = useState(true);
   const currentIndexRef = useRef(currentIndex);
 
   const {
@@ -29,51 +26,6 @@ const DegenScreen = () => {
     fetchNextCoins,
     resetCoins,
   } = useFetchCoins();
-
-  useEffect(() => {
-    const handleFirstRenderAuth = async () => {
-      try {
-        const url = new URL(window.location.href);
-        const hashParams = url.hash.substring(1);
-
-        if (hashParams.startsWith("b64Params=")) {
-          const base64String = hashParams.replace("b64Params=", "");
-          const decodedString = atob(base64String);
-          const parsedParams = JSON.parse(decodedString);
-
-          if (parsedParams.sessionId && parsedParams.email) {
-            await initializeWeb3Auth();
-            const jwtResponse = await loginWithEmail(parsedParams.email);
-
-            if (jwtResponse) {
-              sessionStorage.setItem("jwtToken", jwtResponse.jwt);
-              sessionStorage.setItem("walletAddress", jwtResponse.walletAddress);
-              sessionStorage.setItem("privateKey", jwtResponse.privateKey);
-              sessionStorage.setItem("publicKey", jwtResponse.publicKey);
-              sessionStorage.setItem("userId", jwtResponse.userId || "");
-              sessionStorage.setItem("hasAuthToken", "true");
-
-              // Clear hash after processing
-              window.history.replaceState({}, document.title, window.location.pathname);
-            }
-          }
-        }
-
-        // Validate storage after processing
-        const requiredKeys = ["jwtToken", "walletAddress", "privateKey", "publicKey"];
-        if (!requiredKeys.every(k => sessionStorage.getItem(k))) {
-          router.replace("/login");
-        }
-      } catch (error) {
-        console.error("Initial auth error:", error);
-        router.replace("/login");
-      } finally {
-        setInitializing(false);
-      }
-    };
-
-    handleFirstRenderAuth();
-  }, [router]);
 
   // Track index changes
   useEffect(() => {
@@ -89,15 +41,19 @@ const DegenScreen = () => {
   
   // Initial fetch
   useEffect(() => {
-    if (!initializing) {
-      const userId = sessionStorage.getItem("userId");
-      const token = sessionStorage.getItem("jwtToken");
+    const fetchInitial = () => {
+      // const userId = sessionStorage.getItem("userId");
+      // const userToken = sessionStorage.getItem("jwtToken");
+      const token = Cookies.get("jwtToken");
+      const userId = Cookies.get("userId");
       
       if (userId && token) {
         fetchNewCoins(userId, [], 5, token);
       }
-    }
-  }, [initializing, fetchNewCoins]);
+    };
+    
+    if (typeof window !== "undefined") fetchInitial();
+  }, [fetchNewCoins]);
 
   const handleSwipe = (direction: "left" | "right" | "up" | "down") => {
     const currentCoinId = coins[currentIndexRef.current].coinId;
@@ -112,8 +68,10 @@ const DegenScreen = () => {
       hasMore &&
       !loading
     ) {
-      const userId = sessionStorage.getItem("userId");
-      const userToken = sessionStorage.getItem("jwtToken");
+      // const userId = sessionStorage.getItem("userId");
+      // const userToken = sessionStorage.getItem("jwtToken");
+      const userToken = Cookies.get("jwtToken");
+      const userId = Cookies.get("userId");
       if (userId && userToken) {
         fetchNextCoins(userId, updatedRemoved, 5, userToken);
       }

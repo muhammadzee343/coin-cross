@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { initializeWeb3Auth, loginWithEmail } from "../../../utils/web3auth";
 import PuffLoader from "react-spinners/PuffLoader";
+import Cookies from "js-cookie";
 
 declare global {
   interface Window {
@@ -36,7 +37,7 @@ export default function Login() {
           const parsedParams = JSON.parse(decodedString);
 
           if (parsedParams.sessionId) {
-            // sessionStorage.setItem("jwtToken", parsedParams.sessionId);
+            sessionStorage.setItem("jwtToken", parsedParams.sessionId);
             sessionStorage.setItem("hasAuthToken", "true");
 
             window.history.replaceState({}, document.title, "/login");
@@ -101,12 +102,12 @@ export default function Login() {
 
       if (jwtResponse && jwtResponse.jwt) {
         if (typeof window !== "undefined") {
-          sessionStorage.setItem("jwtToken", jwtResponse.jwt);
-          sessionStorage.setItem("hasAuthToken", "true");
-          sessionStorage.setItem("walletAddress", jwtResponse.walletAddress);
-          sessionStorage.setItem("privateKey", jwtResponse.privateKey);
-          sessionStorage.setItem("publicKey", jwtResponse.publicKey);
-          sessionStorage.setItem("userId", jwtResponse.userId || "");
+          Cookies.set("jwtToken", jwtResponse.jwt, { expires: 1, secure: true });
+          Cookies.set("hasAuthToken", "true", { expires: 1, secure: true });
+          Cookies.set("walletAddress", jwtResponse.walletAddress, { expires: 1, secure: true });
+          Cookies.set("privateKey", jwtResponse.privateKey, { expires: 1, secure: true });
+          Cookies.set("publicKey", jwtResponse.publicKey, { expires: 1, secure: true });
+          Cookies.set("userId", jwtResponse.userId || "", { expires: 1, secure: true });
         }
 
         router.replace("/home");
