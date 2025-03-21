@@ -65,22 +65,22 @@ export default function Login() {
 
     initWeb3Auth();
 
-    // const initializeTelegram = () => {
-    //   setTimeout(() => {
-    //     if (typeof window !== "undefined" && window.Telegram?.WebApp?.init) {
-    //       try {
-    //         window.Telegram.WebApp.init();
-    //         console.log("Telegram Mini App initialized");
-    //       } catch (error) {
-    //         console.error("Error initializing Telegram Mini App:", error);
-    //       }
-    //     } else {
-    //       console.warn("Telegram WebApp is not available or init() is missing");
-    //     }
-    //   }, 500); // Delay initialization by 500ms
-    // };
+    const initializeTelegram = () => {
+      setTimeout(() => {
+        if (typeof window !== "undefined" && window.Telegram?.WebApp?.init) {
+          try {
+            window.Telegram.WebApp.init();
+            console.log("Telegram Mini App initialized");
+          } catch (error) {
+            console.error("Error initializing Telegram Mini App:", error);
+          }
+        } else {
+          console.warn("Telegram WebApp is not available or init() is missing");
+        }
+      }, 500); // Delay initialization by 500ms
+    };
 
-    // initializeTelegram();
+    initializeTelegram();
 
     return () => {
       isMounted = false;

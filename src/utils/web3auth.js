@@ -104,6 +104,12 @@ export const loginWithEmail = async (email) => {
       throw new Error("Invalid email format");
     }
 
+    if (isTelegramWebView) {
+      window.Telegram.WebApp.ready();
+    } else {
+      console.error("Telegram WebApp is not available.");
+    }
+    
     const web3authProvider = await web3auth.connectTo("auth", {
       loginProvider: "email_passwordless",
       extraLoginOptions: {
@@ -133,15 +139,6 @@ export const loginWithEmail = async (email) => {
       wallet_address,
       email
     );
-   
-    // console.log(web3AuthToken, "web3AuthToken")
-    //     if (typeof window !== "undefined") {
-    //       sessionStorage.setItem("walletAddress", wallet_address);
-    //       sessionStorage.setItem("privateKey", ed25519PrivKeyHex);
-    //       sessionStorage.setItem("publicKey", wallet_address);
-    //       sessionStorage.setItem("userId", web3AuthToken);
-    //       sessionStorage.setItem("hasAuthToken", "true");
-    //     }
 
     return {
       walletAddress: wallet_address,
