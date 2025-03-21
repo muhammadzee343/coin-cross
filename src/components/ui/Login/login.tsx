@@ -26,9 +26,9 @@ export default function Login() {
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    const handleHashParams = async () => {
       const url = new URL(window.location.href);
-      const hashParams = url.hash.substring(1); 
+      const hashParams = url.hash.substring(1);
 
       if (hashParams.startsWith("b64Params=")) {
         try {
@@ -37,18 +37,64 @@ export default function Login() {
           const parsedParams = JSON.parse(decodedString);
 
           if (parsedParams.sessionId) {
-            sessionStorage.setItem("jwtToken", parsedParams.sessionId);
-            sessionStorage.setItem("hasAuthToken", "true");
+            // Store session ID in cookies
+            Cookies.set("sessionId", parsedParams.sessionId, {
+              expires: 1,
+              secure: true,
+              sameSite: "Strict",
+            });
+
+            const jwtResponse = await loginWithEmail(email);
+
+
+            // Store additional data in cookies
+            if(jwtResponse) {
+              Cookies.set("jwtToken", jwtResponse.jwt, { expires: 1, secure: true });
+          Cookies.set("hasAuthToken", "true", { expires: 1, secure: true });
+          Cookies.set("walletAddress", jwtResponse.walletAddress, { expires: 1, secure: true });
+          Cookies.set("privateKey", jwtResponse.privateKey, { expires: 1, secure: true });
+          Cookies.set("publicKey", jwtResponse.publicKey, { expires: 1, secure: true });
+          Cookies.set("userId", jwtResponse.userId || "", { expires: 1, secure: true });
+            }
 
             window.history.replaceState({}, document.title, "/login");
             router.replace("/home");
           }
         } catch (error) {
-          console.error("Error parsing b64Params:", error);
+          console.error("Error handling Telegram redirect:", error);
         }
       }
+    };
+
+    if (typeof window !== "undefined") {
+      handleHashParams();
     }
-  }, []);
+  }, [router]);
+
+  // useEffect(() => {
+  //   if (typeof window !== "undefined") {
+  //     const url = new URL(window.location.href);
+  //     const hashParams = url.hash.substring(1); 
+
+  //     if (hashParams.startsWith("b64Params=")) {
+  //       try {
+  //         const base64String = hashParams.replace("b64Params=", "");
+  //         const decodedString = atob(base64String);
+  //         const parsedParams = JSON.parse(decodedString);
+
+  //         if (parsedParams.sessionId) {
+  //           sessionStorage.setItem("jwtToken", parsedParams.sessionId);
+  //           sessionStorage.setItem("hasAuthToken", "true");
+
+  //           window.history.replaceState({}, document.title, "/login");
+  //           router.replace("/home");
+  //         }
+  //       } catch (error) {
+  //         console.error("Error parsing b64Params:", error);
+  //       }
+  //     }
+  //   }
+  // }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -101,14 +147,14 @@ export default function Login() {
       const jwtResponse = await loginWithEmail(email);
 
       if (jwtResponse && jwtResponse.jwt) {
-        if (typeof window !== "undefined") {
-          Cookies.set("jwtToken", jwtResponse.jwt, { expires: 1, secure: true });
-          Cookies.set("hasAuthToken", "true", { expires: 1, secure: true });
-          Cookies.set("walletAddress", jwtResponse.walletAddress, { expires: 1, secure: true });
-          Cookies.set("privateKey", jwtResponse.privateKey, { expires: 1, secure: true });
-          Cookies.set("publicKey", jwtResponse.publicKey, { expires: 1, secure: true });
-          Cookies.set("userId", jwtResponse.userId || "", { expires: 1, secure: true });
-        }
+        // if (typeof window !== "undefined") {
+        //   Cookies.set("jwtToken", jwtResponse.jwt, { expires: 1, secure: true });
+        //   Cookies.set("hasAuthToken", "true", { expires: 1, secure: true });
+        //   Cookies.set("walletAddress", jwtResponse.walletAddress, { expires: 1, secure: true });
+        //   Cookies.set("privateKey", jwtResponse.privateKey, { expires: 1, secure: true });
+        //   Cookies.set("publicKey", jwtResponse.publicKey, { expires: 1, secure: true });
+        //   Cookies.set("userId", jwtResponse.userId || "", { expires: 1, secure: true });
+        // }
 
         router.replace("/home");
 
