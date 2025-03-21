@@ -53,11 +53,7 @@ export default function Login() {
               sessionStorage.setItem("hasAuthToken", "true");
   
               // Force reload for Telegram WebView
-              if (window.Telegram?.WebApp) {
-                window.location.href = "/home";
-              } else {
-                router.replace("/home");
-              }
+              router.replace("/home");
             }
           }
         } catch (error) {
@@ -68,7 +64,7 @@ export default function Login() {
   
     handleHashParams();
   }, [router]);
-  
+
   // useEffect(() => {
   //   if (typeof window !== "undefined") {
   //     const url = new URL(window.location.href);
