@@ -36,11 +36,14 @@ export default function Login() {
           const parsedParams = JSON.parse(decodedString);
 
           if (parsedParams.sessionId) {
-            sessionStorage.setItem("jwtToken", parsedParams.sessionId);
-            sessionStorage.setItem("hasAuthToken", "true");
+            // sessionStorage.setItem("jwtToken", parsedParams.sessionId);
+            // sessionStorage.setItem("hasAuthToken", "true");
 
             window.history.replaceState({}, document.title, "/login");
             router.replace("/home");
+            // if (typeof window !== "undefined" && !sessionStorage.getItem("jwtToken")) {
+            //   router.push("/home");
+            // }
           }
         } catch (error) {
           console.error("Error parsing b64Params:", error);
@@ -64,7 +67,7 @@ export default function Login() {
     };
 
     initWeb3Auth();
-    
+
     return () => {
       isMounted = false;
     };
