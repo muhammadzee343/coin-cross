@@ -9,7 +9,7 @@ import { useFetchCoins } from "@/lib/customHooks/useFetchCoins";
 import { useAuth } from "@/lib/customHooks/useAuth";
 
 const DegenScreen = () => {
-  const { token } = useAuth()
+  const { token, userId } = useAuth()
   const [currentIndex, setCurrentIndex] = useState(0);
   const [removedCards, setRemovedCards] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -37,16 +37,15 @@ const DegenScreen = () => {
       setIsAllDataFetched(true);
     }
   }, [currentIndex, coins.length, hasMore]);
-  console.log(token, "token")
+  
   // Initial fetch
   useEffect(() => {
     const fetchInitial = () => {
-      const userId = sessionStorage.getItem("userId");
-      const userToken = sessionStorage.getItem("jwtToken");
-      console.log(userId, "userId")
+      // const userId = sessionStorage.getItem("userId");
+      // const userToken = sessionStorage.getItem("jwtToken");
       
-      if (userId && userToken) {
-        fetchNewCoins(userId, [], 5, userToken);
+      if (userId && token) {
+        fetchNewCoins(userId, [], 5, token);
       }
     };
     

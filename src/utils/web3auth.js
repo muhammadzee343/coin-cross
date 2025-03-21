@@ -104,12 +104,6 @@ export const loginWithEmail = async (email) => {
       throw new Error("Invalid email format");
     }
 
-    if (isTelegramWebView) {
-      window.Telegram.WebApp.ready();
-    } else {
-      console.error("Telegram WebApp is not available.");
-    }
-    
     const web3authProvider = await web3auth.connectTo("auth", {
       loginProvider: "email_passwordless",
       extraLoginOptions: {
