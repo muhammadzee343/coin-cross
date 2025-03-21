@@ -25,69 +25,29 @@ export default function Login() {
   const router = useRouter();
 
   useEffect(() => {
-    const handleHashParams = async () => {
-      if (typeof window === "undefined") return;
-  
+    if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
-      const hashParams = url.hash.substring(1);
-  
+      const hashParams = url.hash.substring(1); 
+
       if (hashParams.startsWith("b64Params=")) {
         try {
           const base64String = hashParams.replace("b64Params=", "");
           const decodedString = atob(base64String);
           const parsedParams = JSON.parse(decodedString);
-  
+
           if (parsedParams.sessionId) {
-            // Initialize Web3Auth first
-            await initializeWeb3Auth();
-            
-            // Programmatically trigger login flow
-            const jwtResponse = await loginWithEmail(parsedParams.email); // Email should be in params
-  
-            if (jwtResponse) {
-              sessionStorage.setItem("jwtToken", jwtResponse.jwt);
-              sessionStorage.setItem("walletAddress", jwtResponse.walletAddress);
-              sessionStorage.setItem("privateKey", jwtResponse.privateKey);
-              sessionStorage.setItem("publicKey", jwtResponse.publicKey);
-              sessionStorage.setItem("userId", jwtResponse.userId || "");
-              sessionStorage.setItem("hasAuthToken", "true");
-            }
+            // sessionStorage.setItem("jwtToken", parsedParams.sessionId);
+            sessionStorage.setItem("hasAuthToken", "true");
+
             window.history.replaceState({}, document.title, "/login");
             router.replace("/home");
           }
         } catch (error) {
-          console.error("Error handling hash params:", error);
+          console.error("Error parsing b64Params:", error);
         }
       }
-    };
-  
-    handleHashParams();
+    }
   }, []);
-
-  // useEffect(() => {
-  //   if (typeof window !== "undefined") {
-  //     const url = new URL(window.location.href);
-  //     const hashParams = url.hash.substring(1); 
-
-  //     if (hashParams.startsWith("b64Params=")) {
-  //       try {
-  //         const base64String = hashParams.replace("b64Params=", "");
-  //         const decodedString = atob(base64String);
-  //         const parsedParams = JSON.parse(decodedString);
-
-  //         if (parsedParams.sessionId) {
-  //           // sessionStorage.setItem("jwtToken", parsedParams.sessionId);
-  //           sessionStorage.setItem("hasAuthToken", "true");
-
-  //           window.history.replaceState({}, document.title, "/login");
-  //           router.replace("/home");
-  //         }
-  //       } catch (error) {
-  //         console.error("Error parsing b64Params:", error);
-  //       }
-  //     }
-  //   }
-  // }, []);
 
   useEffect(() => {
     let isMounted = true;
