@@ -51,10 +51,9 @@ export default function Login() {
               sessionStorage.setItem("publicKey", jwtResponse.publicKey);
               sessionStorage.setItem("userId", jwtResponse.userId || "");
               sessionStorage.setItem("hasAuthToken", "true");
-  
-              // Force reload for Telegram WebView
-              router.replace("/home");
             }
+            window.history.replaceState({}, document.title, "/login");
+            router.replace("/home");
           }
         } catch (error) {
           console.error("Error handling hash params:", error);
@@ -63,7 +62,7 @@ export default function Login() {
     };
   
     handleHashParams();
-  }, [router]);
+  }, []);
 
   // useEffect(() => {
   //   if (typeof window !== "undefined") {
