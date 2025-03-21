@@ -25,32 +25,74 @@ export default function Login() {
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    const handleHashParams = async () => {
+      if (typeof window === "undefined") return;
+  
       const url = new URL(window.location.href);
-      const hashParams = url.hash.substring(1); 
-
+      const hashParams = url.hash.substring(1);
+  
       if (hashParams.startsWith("b64Params=")) {
         try {
           const base64String = hashParams.replace("b64Params=", "");
           const decodedString = atob(base64String);
           const parsedParams = JSON.parse(decodedString);
-
+  
           if (parsedParams.sessionId) {
-            // sessionStorage.setItem("jwtToken", parsedParams.sessionId);
-            // sessionStorage.setItem("hasAuthToken", "true");
-
-            window.history.replaceState({}, document.title, "/login");
-            router.replace("/home");
-            // if (typeof window !== "undefined" && !sessionStorage.getItem("jwtToken")) {
-            //   router.push("/home");
-            // }
+            // Initialize Web3Auth first
+            await initializeWeb3Auth();
+            
+            // Programmatically trigger login flow
+            const jwtResponse = await loginWithEmail(parsedParams.email); // Email should be in params
+  
+            if (jwtResponse) {
+              sessionStorage.setItem("jwtToken", jwtResponse.jwt);
+              sessionStorage.setItem("walletAddress", jwtResponse.walletAddress);
+              sessionStorage.setItem("privateKey", jwtResponse.privateKey);
+              sessionStorage.setItem("publicKey", jwtResponse.publicKey);
+              sessionStorage.setItem("userId", jwtResponse.userId || "");
+              sessionStorage.setItem("hasAuthToken", "true");
+  
+              // Force reload for Telegram WebView
+              if (window.Telegram?.WebApp) {
+                window.location.href = "/home";
+              } else {
+                router.replace("/home");
+              }
+            }
           }
         } catch (error) {
-          console.error("Error parsing b64Params:", error);
+          console.error("Error handling hash params:", error);
         }
       }
-    }
-  }, []);
+    };
+  
+    handleHashParams();
+  }, [router]);
+  
+  // useEffect(() => {
+  //   if (typeof window !== "undefined") {
+  //     const url = new URL(window.location.href);
+  //     const hashParams = url.hash.substring(1); 
+
+  //     if (hashParams.startsWith("b64Params=")) {
+  //       try {
+  //         const base64String = hashParams.replace("b64Params=", "");
+  //         const decodedString = atob(base64String);
+  //         const parsedParams = JSON.parse(decodedString);
+
+  //         if (parsedParams.sessionId) {
+  //           // sessionStorage.setItem("jwtToken", parsedParams.sessionId);
+  //           sessionStorage.setItem("hasAuthToken", "true");
+
+  //           window.history.replaceState({}, document.title, "/login");
+  //           router.replace("/home");
+  //         }
+  //       } catch (error) {
+  //         console.error("Error parsing b64Params:", error);
+  //       }
+  //     }
+  //   }
+  // }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -67,6 +109,23 @@ export default function Login() {
     };
 
     initWeb3Auth();
+
+    // const initializeTelegram = () => {
+    //   setTimeout(() => {
+    //     if (typeof window !== "undefined" && window.Telegram?.WebApp?.init) {
+    //       try {
+    //         window.Telegram.WebApp.init();
+    //         console.log("Telegram Mini App initialized");
+    //       } catch (error) {
+    //         console.error("Error initializing Telegram Mini App:", error);
+    //       }
+    //     } else {
+    //       console.warn("Telegram WebApp is not available or init() is missing");
+    //     }
+    //   }, 500); // Delay initialization by 500ms
+    // };
+
+    // initializeTelegram();
 
     return () => {
       isMounted = false;
