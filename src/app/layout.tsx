@@ -18,18 +18,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-      <script async src="https://telegram.org/js/telegram-web-app.js"></script>
+        <script
+          async
+          src="https://telegram.org/js/telegram-web-app.js"
+        ></script>
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
         />
       </head>
 
-        <body className="antialiased bg-background-default mx-auto">
+      <body className="antialiased bg-background-default mx-auto">
         <StoreProvider>
-          <RootProvider>
-            {children}
-          </RootProvider>
+          <RootProvider>{children}</RootProvider>
         </StoreProvider>
       </body>
     </html>

@@ -6,11 +6,8 @@ import { SwipeableCardStack } from "@/components/ui/SwipeableCardStack";
 import SkipCoinIcon from "../../../public/assets/svg/SkipIcon";
 import DetailIcon from "../../../public/assets/svg/DetailIcon";
 import { useFetchCoins } from "@/lib/customHooks/useFetchCoins";
-import { useAuth } from "@/lib/customHooks/useAuth";
-import Cookies from "js-cookie";
 
 const DegenScreen = () => {
-  // const { token, userId } = useAuth()
   const [currentIndex, setCurrentIndex] = useState(0);
   const [removedCards, setRemovedCards] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -38,40 +35,31 @@ const DegenScreen = () => {
       setIsAllDataFetched(true);
     }
   }, [currentIndex, coins.length, hasMore]);
-  
+
   // Initial fetch
   useEffect(() => {
     const fetchInitial = () => {
-      // const userId = sessionStorage.getItem("userId");
-      // const userToken = sessionStorage.getItem("jwtToken");
-      const token = Cookies.get("jwtToken");
-      const userId = Cookies.get("userId");
-      
-      if (userId && token) {
-        fetchNewCoins(userId, [], 5, token);
+      const userId = sessionStorage.getItem("userId");
+      const userToken = sessionStorage.getItem("jwtToken");
+      if (userId && userToken) {
+        fetchNewCoins(userId, [], 5, userToken);
       }
     };
-    
+
     if (typeof window !== "undefined") fetchInitial();
   }, [fetchNewCoins]);
 
   const handleSwipe = (direction: "left" | "right" | "up" | "down") => {
     const currentCoinId = coins[currentIndexRef.current].coinId;
     const updatedRemoved = [...removedCards, currentCoinId];
-    
+
     setRemovedCards(updatedRemoved);
-    setCurrentIndex(prev => Math.min(prev + 1, coins.length - 1));
+    setCurrentIndex((prev) => Math.min(prev + 1, coins.length - 1));
 
     // Check if we need to fetch more
-    if (
-      currentIndexRef.current >= coins.length - 2 &&
-      hasMore &&
-      !loading
-    ) {
-      // const userId = sessionStorage.getItem("userId");
-      // const userToken = sessionStorage.getItem("jwtToken");
-      const userToken = Cookies.get("jwtToken");
-      const userId = Cookies.get("userId");
+    if (currentIndexRef.current >= coins.length - 2 && hasMore && !loading) {
+      const userId = sessionStorage.getItem("userId");
+      const userToken = sessionStorage.getItem("jwtToken");
       if (userId && userToken) {
         fetchNextCoins(userId, updatedRemoved, 5, userToken);
       }
@@ -79,9 +67,12 @@ const DegenScreen = () => {
 
     // Handle like
     if (direction === "right") {
-      const storedCoins = JSON.parse(sessionStorage.getItem("likedCoins") || "[]");
+      const storedCoins = JSON.parse(
+        localStorage.getItem("likedCoins") || "[]"
+      );
       if (!storedCoins.some((c: any) => c.coinId === currentCoinId)) {
-        localStorage.setItem("likedCoins", 
+        localStorage.setItem(
+          "likedCoins",
           JSON.stringify([...storedCoins, coins[currentIndexRef.current]])
         );
       }
@@ -91,30 +82,28 @@ const DegenScreen = () => {
   const handleRestart = () => {
     const userId = sessionStorage.getItem("userId");
     const userToken = sessionStorage.getItem("jwtToken");
-    
+
     setCurrentIndex(0);
     setRemovedCards([]);
     setIsAllDataFetched(false);
     resetCoins();
-    
+
     if (userId && userToken) {
       fetchNewCoins(userId, [], 5, userToken);
     }
   };
 
-  return (
-    isAllDataFetched ? (
-      <div className="text-center mt-4">
-        <p className="text-lg font-bold">All coins fetched!</p>
-        <button
-          onClick={handleRestart}
-          className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg"
-        >
-          Start Over
-        </button>
-      </div>
-    )
-  :
+  return isAllDataFetched ? (
+    <div className="text-center mt-4">
+      <p className="text-lg font-bold">All coins fetched!</p>
+      <button
+        onClick={handleRestart}
+        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg"
+      >
+        Start Over
+      </button>
+    </div>
+  ) : (
     <div className="flex flex-col justify-between h-full flex-1">
       <div className="min-h-[50vh]">
         {coins.length > 0 && (

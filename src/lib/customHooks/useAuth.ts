@@ -15,22 +15,17 @@ export const useAuth = () => {
 
   const [publicKey, setPublicKey] = useState<PublicKey | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedPublicKey = sessionStorage.getItem("publicKey");
       const storedToken = sessionStorage.getItem("jwtToken");
-      const userId = sessionStorage.getItem("userId");
       
       if (storedPublicKey) {
         setPublicKey(new PublicKey(storedPublicKey));
       }
       if (storedToken) {
         setToken(storedToken);
-      }
-      if(userId) {
-        setUserId(userId)
       }
     }
   }, []);
@@ -47,5 +42,5 @@ export const useAuth = () => {
     }
   }, [isAuthenticated]);
 
-  return { isAuthenticated, isLoading, error, logout, publicKey, token, userId };
+  return { isAuthenticated, isLoading, error, logout, publicKey, token };
 };
