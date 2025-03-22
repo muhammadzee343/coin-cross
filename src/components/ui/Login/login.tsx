@@ -3,8 +3,13 @@
 import { Input } from "@/components/ui/Input";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { initializeWeb3Auth, loginWithEmail } from "../../../utils/web3auth";
+import { exchangeTokenForJWT, getWeb3AuthToken, initializeWeb3Auth, loginWithEmail } from "../../../utils/web3auth";
 import PuffLoader from "react-spinners/PuffLoader";
+import nacl from "tweetnacl";
+import bs58 from "bs58";
+import { Web3AuthNoModal } from "@web3auth/no-modal";
+import { SolanaPrivateKeyProvider } from "@web3auth/solana-provider";
+import { CHAIN_NAMESPACES } from "@web3auth/base";
 
 declare global {
   interface Window {
@@ -55,18 +60,52 @@ export default function Login() {
         if (!isMounted) return;
   
         setWeb3authReady(true);
+
+        const clientId =
+          "BMN2ub_-ZvBIyDnqrw4U8vVRatEjWHYv8rmqSmxhcM-PJ2852Mp_GdqKlvUTh3kp6QVFjRokRCzfPipn1DKpjsY";
+        const verifierName = "coincrush_agg_verifier";
+        const isTelegramWebView =
+          typeof window !== "undefined" && window?.Telegram?.WebApp !== undefined;
+        
+        const chainConfig = {
+          chainNamespace: CHAIN_NAMESPACES.SOLANA,
+          chainId: "0x3",
+          rpcTarget: "https://api.devnet.solana.com",
+          displayName: "Solana Devnet",
+          blockExplorerUrl: "https://explorer.solana.com",
+          ticker: "SOL",
+          tickerName: "Solana",
+        };
+        
+        const privateKeyProvider = new SolanaPrivateKeyProvider({
+          config: { chainConfig },
+        });
+        
+        const web3auth = new Web3AuthNoModal({
+          clientId,
+          web3AuthNetwork: "sapphire_devnet",
+          privateKeyProvider,
+        });
   
         if (web3authInstance.status === 'connected') {
-          const provider = await web3authInstance.connect();
-          const userInfo = await web3authInstance.getUserInfo();
-          const email = userInfo.email!;
+          const provider = await web3auth.connectTo("auth", {
+            loginProvider: "email_passwordless",
+            extraLoginOptions: {
+              login_hint: email.trim(),
+              verifierIdField: "email",
+              // redirectUrl: isTelegramWebView ? window.Telegram.WebApp.initDataUnsafe?.start_param || window.location.origin : window.location.origin + "/auth-callback",
+            },
+          });;
   
+          if(provider !== null) {
           const ed25519PrivKeyHex = await provider.request({
             method: "private_key",
           });
+        
           const keyPair = nacl.sign.keyPair.fromSecretKey(
-            Buffer.from(ed25519PrivKeyHex, "hex")
+            Buffer.from(ed25519PrivKeyHex as string, "hex")
           );
+        
           const wallet_address = bs58.encode(keyPair.publicKey);
           const web3AuthToken = await getWeb3AuthToken();
   
@@ -79,11 +118,12 @@ export default function Login() {
           sessionStorage.setItem("jwtToken", jwtResponse.token);
           sessionStorage.setItem("hasAuthToken", "true");
           sessionStorage.setItem("walletAddress", wallet_address);
-          sessionStorage.setItem("privateKey", ed25519PrivKeyHex);
+          sessionStorage.setItem("privateKey", ed25519PrivKeyHex as string);
           sessionStorage.setItem("publicKey", wallet_address);
           sessionStorage.setItem("userId", jwtResponse.userId || "");
   
           router.replace("/home");
+        }
         }
       } catch (error) {
         console.error("Error initializing Web3Auth:", error);
