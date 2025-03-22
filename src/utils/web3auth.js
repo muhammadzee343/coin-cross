@@ -67,6 +67,10 @@ export const initializeWeb3Auth = async () => {
   return web3auth;
 };
 
+export const resetWeb3AuthInitialization = () => {
+  isInitialized = false;
+};
+
 export const getWeb3AuthToken = async () => {
   if (!web3auth) throw new Error("Web3Auth not initialized");
   try {
