@@ -5,7 +5,6 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { initializeWeb3Auth, loginWithEmail } from "../../../utils/web3auth";
 import PuffLoader from "react-spinners/PuffLoader";
-import Cookies from "js-cookie";
 
 declare global {
   interface Window {
@@ -21,114 +20,78 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [web3authReady, setWeb3authReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const router = useRouter();
 
   useEffect(() => {
-    const handleHashParams = async () => {
-      const url = new URL(window.location.href);
-      const hashParams = url.hash.substring(1);
-
-      if (hashParams.startsWith("b64Params=")) {
-        try {
-          const base64String = hashParams.replace("b64Params=", "");
-          const decodedString = atob(base64String);
-          const parsedParams = JSON.parse(decodedString);
-
-          if (parsedParams.sessionId) {
-            // Store session ID in cookies
-            Cookies.set("sessionId", parsedParams.sessionId, {
-              expires: 1,
-              secure: true,
-              sameSite: "Strict",
-            });
-
-            const jwtResponse = await loginWithEmail(email);
-
-
-            // Store additional data in cookies
-            if(jwtResponse) {
-              Cookies.set("jwtToken", jwtResponse.jwt, { expires: 1, secure: true });
-          Cookies.set("hasAuthToken", "true", { expires: 1, secure: true });
-          Cookies.set("walletAddress", jwtResponse.walletAddress, { expires: 1, secure: true });
-          Cookies.set("privateKey", jwtResponse.privateKey, { expires: 1, secure: true });
-          Cookies.set("publicKey", jwtResponse.publicKey, { expires: 1, secure: true });
-          Cookies.set("userId", jwtResponse.userId || "", { expires: 1, secure: true });
-            }
-
-            window.history.replaceState({}, document.title, "/login");
-            router.replace("/home");
-          }
-        } catch (error) {
-          console.error("Error handling Telegram redirect:", error);
+    if (typeof window === "undefined") return;
+  
+    const url = new URL(window.location.href);
+    const hashParams = url.hash.substring(1);
+  
+    if (hashParams.startsWith("b64Params=") && !sessionStorage.getItem("hasAuthToken")) {
+      try {
+        const base64String = hashParams.replace("b64Params=", "");
+        const decodedString = atob(base64String);
+        const parsedParams = JSON.parse(decodedString);
+  
+        if (parsedParams.sessionId) {
+          sessionStorage.setItem("hasAuthToken", "true");
+          window.history.replaceState({}, document.title, "/login");
+          router.replace("/home");
         }
+      } catch (error) {
+        console.error("Error parsing b64Params:", error);
       }
-    };
-
-    if (typeof window !== "undefined") {
-      handleHashParams();
     }
-  }, [router]);
-
-  // useEffect(() => {
-  //   if (typeof window !== "undefined") {
-  //     const url = new URL(window.location.href);
-  //     const hashParams = url.hash.substring(1); 
-
-  //     if (hashParams.startsWith("b64Params=")) {
-  //       try {
-  //         const base64String = hashParams.replace("b64Params=", "");
-  //         const decodedString = atob(base64String);
-  //         const parsedParams = JSON.parse(decodedString);
-
-  //         if (parsedParams.sessionId) {
-  //           sessionStorage.setItem("jwtToken", parsedParams.sessionId);
-  //           sessionStorage.setItem("hasAuthToken", "true");
-
-  //           window.history.replaceState({}, document.title, "/login");
-  //           router.replace("/home");
-  //         }
-  //       } catch (error) {
-  //         console.error("Error parsing b64Params:", error);
-  //       }
-  //     }
-  //   }
-  // }, []);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
-
+  
     const initWeb3Auth = async () => {
       try {
-        await initializeWeb3Auth();
-        if (isMounted) {
-          setWeb3authReady(true);
+        const web3authInstance = await initializeWeb3Auth();
+        if (!isMounted) return;
+  
+        setWeb3authReady(true);
+  
+        if (web3authInstance.status === 'connected') {
+          const provider = await web3authInstance.connect();
+          const userInfo = await web3authInstance.getUserInfo();
+          const email = userInfo.email!;
+  
+          const ed25519PrivKeyHex = await provider.request({
+            method: "private_key",
+          });
+          const keyPair = nacl.sign.keyPair.fromSecretKey(
+            Buffer.from(ed25519PrivKeyHex, "hex")
+          );
+          const wallet_address = bs58.encode(keyPair.publicKey);
+          const web3AuthToken = await getWeb3AuthToken();
+  
+          const jwtResponse = await exchangeTokenForJWT(
+            web3AuthToken,
+            wallet_address,
+            email
+          );
+  
+          sessionStorage.setItem("jwtToken", jwtResponse.token);
+          sessionStorage.setItem("hasAuthToken", "true");
+          sessionStorage.setItem("walletAddress", wallet_address);
+          sessionStorage.setItem("privateKey", ed25519PrivKeyHex);
+          sessionStorage.setItem("publicKey", wallet_address);
+          sessionStorage.setItem("userId", jwtResponse.userId || "");
+  
+          router.replace("/home");
         }
       } catch (error) {
         console.error("Error initializing Web3Auth:", error);
       }
     };
-
+  
     initWeb3Auth();
-
-    // const initializeTelegram = () => {
-    //   setTimeout(() => {
-    //     if (typeof window !== "undefined" && window.Telegram?.WebApp?.init) {
-    //       try {
-    //         window.Telegram.WebApp.init();
-    //         console.log("Telegram Mini App initialized");
-    //       } catch (error) {
-    //         console.error("Error initializing Telegram Mini App:", error);
-    //       }
-    //     } else {
-    //       console.warn("Telegram WebApp is not available or init() is missing");
-    //     }
-    //   }, 500); // Delay initialization by 500ms
-    // };
-
-    // initializeTelegram();
-
+  
     return () => {
       isMounted = false;
     };
@@ -147,14 +110,14 @@ export default function Login() {
       const jwtResponse = await loginWithEmail(email);
 
       if (jwtResponse && jwtResponse.jwt) {
-        // if (typeof window !== "undefined") {
-        //   Cookies.set("jwtToken", jwtResponse.jwt, { expires: 1, secure: true });
-        //   Cookies.set("hasAuthToken", "true", { expires: 1, secure: true });
-        //   Cookies.set("walletAddress", jwtResponse.walletAddress, { expires: 1, secure: true });
-        //   Cookies.set("privateKey", jwtResponse.privateKey, { expires: 1, secure: true });
-        //   Cookies.set("publicKey", jwtResponse.publicKey, { expires: 1, secure: true });
-        //   Cookies.set("userId", jwtResponse.userId || "", { expires: 1, secure: true });
-        // }
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("jwtToken", jwtResponse.jwt);
+          sessionStorage.setItem("hasAuthToken", "true");
+          sessionStorage.setItem("walletAddress", jwtResponse.walletAddress);
+          sessionStorage.setItem("privateKey", jwtResponse.privateKey);
+          sessionStorage.setItem("publicKey", jwtResponse.publicKey);
+          sessionStorage.setItem("userId", jwtResponse.userId || "");
+        }
 
         router.replace("/home");
 

@@ -43,6 +43,9 @@ const authAdapter = new AuthAdapter({
         verifierIdField: "email",
       },
     },
+    redirectUrl: isTelegramWebView 
+      ? window.Telegram.WebApp.initDataUnsafe?.start_param || window.location.origin 
+      : window.location.origin + "/auth-callback",
   },
   privateKeyProvider,
 });
@@ -97,28 +100,13 @@ async function exchangeTokenForJWT(web3AuthToken, wallet_address, email) {
 export const loginWithEmail = async (email) => {
   try {
     if (!isInitialized) await initializeWeb3Auth();
+    if (web3auth.status === "connected") return;
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       throw new Error("Invalid email format");
     }
 
-    if (web3auth.status === "connected") {
-      const provider = await web3auth.connect();
-      const ed25519PrivKeyHex = await provider.request({ method: "private_key" });
-      
-      const keyPair = nacl.sign.keyPair.fromSecretKey(
-        Buffer.from(ed25519PrivKeyHex, "hex")
-      );
-      
-      return {
-        walletAddress: bs58.encode(keyPair.publicKey),
-        jwt: await getWeb3AuthToken(),
-        privateKey: ed25519PrivKeyHex,
-        publicKey: bs58.encode(keyPair.publicKey),
-        userId: "derived_user_id"
-      };
-    }
     const web3authProvider = await web3auth.connectTo("auth", {
       loginProvider: "email_passwordless",
       extraLoginOptions: {
