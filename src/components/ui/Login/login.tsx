@@ -12,6 +12,7 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [web3authReady, setWeb3authReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const router = useRouter();
 
   useEffect(() => {
@@ -61,7 +62,6 @@ export default function LoginForm() {
             return;
           }
 
-          // Rest of your existing connection handling code
           const userInfo = await web3authInstance.getUserInfo();
           const userEmail = userInfo.email || email;
 
@@ -74,7 +74,7 @@ export default function LoginForm() {
           );
           const wallet_address = bs58.encode(keyPair.publicKey);
           const web3AuthToken = await getWeb3AuthToken();
-
+          console.log(web3AuthToken, web3AuthToken)
           if (web3AuthToken) {
             const jwtResponse = await exchangeTokenForJWT(
               web3AuthToken, 
@@ -105,7 +105,7 @@ export default function LoginForm() {
     return () => {
       isMounted = false;
     };
-  }, [router, email]);
+  }, [router, email, isLoggedIn]);
 
   const sendOtp = async () => {
     try {
@@ -118,13 +118,8 @@ export default function LoginForm() {
       const jwtResponse = await loginWithEmail(email);
 
       if (jwtResponse?.jwt && jwtResponse.userId) {
-        sessionStorage.setItem("jwtToken", jwtResponse.jwt);
-        sessionStorage.setItem("hasAuthToken", "true");
-        sessionStorage.setItem("walletAddress", jwtResponse.walletAddress);
-        sessionStorage.setItem("privateKey", jwtResponse.privateKey);
-        sessionStorage.setItem("publicKey", jwtResponse.publicKey);
-        sessionStorage.setItem("userId", jwtResponse.userId);
-        router.replace("/home");
+        setIsLoggedIn(true)
+        // router.replace("/home");
       }
     } catch (error) {
       console.error("Login error:", error);
