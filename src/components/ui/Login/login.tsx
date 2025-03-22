@@ -63,9 +63,6 @@ export default function Login() {
 
         const clientId =
           "BMN2ub_-ZvBIyDnqrw4U8vVRatEjWHYv8rmqSmxhcM-PJ2852Mp_GdqKlvUTh3kp6QVFjRokRCzfPipn1DKpjsY";
-        const verifierName = "coincrush_agg_verifier";
-        const isTelegramWebView =
-          typeof window !== "undefined" && window?.Telegram?.WebApp !== undefined;
         
         const chainConfig = {
           chainNamespace: CHAIN_NAMESPACES.SOLANA,
