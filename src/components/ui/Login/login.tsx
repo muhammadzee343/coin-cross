@@ -1,44 +1,32 @@
 "use client";
+
 import { Input } from "@/components/ui/Input";
-import React, { useEffect, useState, useRef } from "react";
-import { FaLessThan } from "react-icons/fa";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { initializeWeb3Auth, loginWithEmail } from "../../../utils/web3auth";
+import { exchangeTokenForJWT, getWeb3AuthToken, initializeWeb3Auth, loginWithEmail } from "../../../utils/web3auth";
 import PuffLoader from "react-spinners/PuffLoader";
+import nacl from "tweetnacl";
+import bs58 from "bs58";
 
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: {
-        init: () => void;
-      };
-    };
-  }
-}
-
-export default function Login() {
+export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [web3authReady, setWeb3authReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [jwtToken, setJwtToken] = useState<string | null>(null);
-
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    const handleHashParams = () => {
       const url = new URL(window.location.href);
-      const hashParams = url.hash.substring(1); 
-
-      if (hashParams.startsWith("b64Params=")) {
+      const hashParams = url.hash.substring(1);
+      
+      if (hashParams.startsWith("b64Params=") && !sessionStorage.getItem("hasAuthToken")) {
         try {
           const base64String = hashParams.replace("b64Params=", "");
           const decodedString = atob(base64String);
           const parsedParams = JSON.parse(decodedString);
 
           if (parsedParams.sessionId) {
-            sessionStorage.setItem("jwtToken", parsedParams.sessionId);
             sessionStorage.setItem("hasAuthToken", "true");
-
             window.history.replaceState({}, document.title, "/login");
             router.replace("/home");
           }
@@ -46,109 +34,121 @@ export default function Login() {
           console.error("Error parsing b64Params:", error);
         }
       }
+    };
+
+    if (typeof window !== "undefined") {
+      handleHashParams();
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     let isMounted = true;
 
     const initWeb3Auth = async () => {
       try {
-        await initializeWeb3Auth();
-        if (isMounted) {
-          setWeb3authReady(true);
+        const web3authInstance = await initializeWeb3Auth();
+        if (!isMounted || !web3authInstance) return;
+
+        setWeb3authReady(true);
+
+        // Modified connection handling
+        if (web3authInstance.status === 'connected') {
+          // Get the existing provider instead of reconnecting
+          const provider = web3authInstance.provider;
+          
+          if (!provider) {
+            console.error("No provider available");
+            return;
+          }
+
+          // Rest of your existing connection handling code
+          const userInfo = await web3authInstance.getUserInfo();
+          const userEmail = userInfo.email || email;
+
+          const ed25519PrivKeyHex = await provider.request({ 
+            method: "private_key" 
+          }) as string;
+          
+          const keyPair = nacl.sign.keyPair.fromSecretKey(
+            Buffer.from(ed25519PrivKeyHex, "hex")
+          );
+          const wallet_address = bs58.encode(keyPair.publicKey);
+          const web3AuthToken = await getWeb3AuthToken();
+
+          if (web3AuthToken) {
+            const jwtResponse = await exchangeTokenForJWT(
+              web3AuthToken, 
+              wallet_address, 
+              userEmail
+            );
+
+            // Session storage operations
+            sessionStorage.setItem("jwtToken", jwtResponse.token);
+            sessionStorage.setItem("hasAuthToken", "true");
+            sessionStorage.setItem("walletAddress", wallet_address);
+            sessionStorage.setItem("privateKey", ed25519PrivKeyHex);
+            sessionStorage.setItem("publicKey", wallet_address);
+            sessionStorage.setItem("userId", jwtResponse.userId || "");
+            
+            router.replace("/home");
+          }
         }
       } catch (error) {
-        console.error("Error initializing Web3Auth:", error);
+        console.error("Web3Auth initialization error:", error);
       }
     };
 
-    initWeb3Auth();
-
-    // Check if user is already authenticated
     if (typeof window !== "undefined") {
-      setJwtToken(localStorage.getItem("jwtToken"));
-    }
-    if (jwtToken) {
-      router.replace("/home");
+      initWeb3Auth();
     }
 
     return () => {
       isMounted = false;
     };
-  }, [router]);
+  }, [router, email]);
 
   const sendOtp = async () => {
     try {
       if (!web3authReady) {
-        console.error("Web3Auth not initialized yet");
+        console.error("Web3Auth not initialized");
         return;
       }
 
       setIsLoading(true);
-
       const jwtResponse = await loginWithEmail(email);
 
-      if (jwtResponse && jwtResponse.jwt) {
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("jwtToken", jwtResponse.jwt);
-          sessionStorage.setItem("hasAuthToken", "true");
-          sessionStorage.setItem("walletAddress", jwtResponse.walletAddress);
-          sessionStorage.setItem("privateKey", jwtResponse.privateKey);
-          sessionStorage.setItem("publicKey", jwtResponse.publicKey);
-          sessionStorage.setItem("userId", jwtResponse.userId || "");
-        }
-
+      if (jwtResponse?.jwt && jwtResponse.userId) {
+        sessionStorage.setItem("jwtToken", jwtResponse.jwt);
+        sessionStorage.setItem("hasAuthToken", "true");
+        sessionStorage.setItem("walletAddress", jwtResponse.walletAddress);
+        sessionStorage.setItem("privateKey", jwtResponse.privateKey);
+        sessionStorage.setItem("publicKey", jwtResponse.publicKey);
+        sessionStorage.setItem("userId", jwtResponse.userId);
         router.replace("/home");
-        
-        setIsLoading(false);
-      } else {
-        throw new Error("Failed to get JWT token");
       }
     } catch (error) {
-      console.error("Error sending OTP:", error);
+      console.error("Login error:", error);
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col justify-between h-full flex-1 mt-[25px]">
-      <div className="flex flex-row gap-2">
-        <FaLessThan className="text-primary-purple" />
-        <p
-          className="md:text-[17px] sm:text-[15px] font-inter font-normal text-primary-purple leading-tight md:pb-8 pb-4"
-          onClick={() => router.replace("/")}
-        >
-          Back
-        </p>
-      </div>
-      <div className="w-full flex justify-center mt-20">
-        <div className="w-[70%]">
-          <h1 className="text-center text-[40px] leading-none text-primary-white">
-            Welcome to Coin Crush
-          </h1>
-        </div>
-      </div>
-
-      <div className="w-full flex justify-center mt-20 px-4">
-        <Input
-          variant="default"
-          placeholder="Enter email"
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
-
+    <div className="flex flex-col justify-center items-center h-screen">
+      <Input
+        placeholder="Enter email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="mb-4 w-64"
+      />
       <button
         onClick={sendOtp}
-        className="bg-primary-purple font-normal text-md py-4 rounded-md mt-6 mx-4"
+        disabled={isLoading}
+        className="bg-primary-purple p-4 rounded-md mt-4 disabled:opacity-50"
       >
-        Sign in with Email Passwordless
+        {isLoading ? "Processing..." : "Sign in"}
       </button>
-      {isLoading && (
-        <div className="mt-10 flex justify-center">
-          <PuffLoader color="#fff" />
-        </div>
-      )}
+      {isLoading && <PuffLoader color="#fff" size={40} className="mt-4" />}
     </div>
   );
 }
