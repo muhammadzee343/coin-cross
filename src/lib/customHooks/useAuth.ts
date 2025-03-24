@@ -53,13 +53,31 @@ import {
   logoutSuccess,
   updateWallets,
 } from "../features/authSlice";
-import { MouseEvent } from "react";
+import { MouseEvent, useEffect, useState } from "react";
+import { PublicKey } from "@solana/web3.js";
 
 export const useAuth = () => {
   const { login, logout, user, linkWallet, unlinkWallet, ready: privyReady } = usePrivy();
   const { wallets, ready: walletsReady } = useWallets();
   const dispatch = useDispatch();
+
+    const [publicKey, setPublicKey] = useState<PublicKey | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   
+    useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedPublicKey = sessionStorage.getItem("publicKey");
+      const storedToken = sessionStorage.getItem("jwtToken");
+
+      if (storedPublicKey) {
+        setPublicKey(new PublicKey(storedPublicKey));
+      }
+      if (storedToken) {
+        setToken(storedToken);
+      }
+    }
+  }, []);
+
   // Check if wallet is already linked
   const isWalletLinked = (address: string) => {
     return user?.linkedAccounts?.some(
@@ -147,5 +165,7 @@ export const useAuth = () => {
     handleUnlinkWallet,
     isWalletLinked,
     getAllWallets,
+    publicKey, 
+    token,
   };
 };

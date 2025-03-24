@@ -4,7 +4,7 @@ import { IoChevronForwardSharp } from "react-icons/io5";
 import { useAuth } from "@/lib/customHooks/useAuth";
 
 export const Settings = () => {
-  const { logout, isLoading } = useAuth();
+  const { handleLogout } = useAuth();
  
   return (
     <div className="p-4 relative h-full">
@@ -51,10 +51,10 @@ export const Settings = () => {
       </ul>
       <button
         className="mt-4 text-red-500 absolute bottom-0 left-0 right-0"
-        onClick={logout}
-        disabled={isLoading}
+        onClick={handleLogout}
+        // disabled={isLoading}
       >
-        {isLoading ? "Signing out..." : "Sign out"}
+        {"Sign out"}
       </button>
     </div>
   );

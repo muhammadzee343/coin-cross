@@ -47,7 +47,7 @@ export default function Login() {
       sessionStorage.setItem("hasAuthToken", "true");
       sessionStorage.setItem("userId", user?.id || "");
       sessionStorage.setItem("walletAddress", user?.wallet?.address || "");
-
+      sessionStorage.setItem("publicKey", user?.wallet?.address || "");
       router.push("/home");
     }
   }
