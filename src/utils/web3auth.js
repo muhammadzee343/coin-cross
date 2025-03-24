@@ -42,9 +42,6 @@ const authAdapter = new AuthAdapter({
         verifierIdField: "email",
       },
     },
-    redirectUrl: isTelegramWebView 
-      ? window.Telegram.WebApp.initDataUnsafe?.start_param || window.location.origin 
-      : window.location.origin + "/auth-callback",
   },
   privateKeyProvider,
 });
@@ -57,7 +54,7 @@ export const resetWeb3AuthInitialization = () => {
   isInitialized = false;
 };
 
-export const getWeb3AuthToken = async () => {
+const getWeb3AuthToken = async () => {
   try {
     const user = await web3auth.authenticateUser();
     return user.idToken;
@@ -79,7 +76,7 @@ export const initializeWeb3Auth = async () => {
   }
 };
 
-export async function exchangeTokenForJWT(web3AuthToken, wallet_address, email) {
+async function exchangeTokenForJWT(web3AuthToken, wallet_address, email) {
   const response = await fetch("https://api.coin-crush.com/v1/auth/token", {
     method: "POST",
     headers: {

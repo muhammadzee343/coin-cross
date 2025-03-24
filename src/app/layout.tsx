@@ -3,6 +3,7 @@ import "./globals.css";
 import Script from "next/script";
 import StoreProvider from "./StoreProvider";
 import RootProvider from "./rootProvider";
+import { PrivyWrapper } from "@/utils/privy-config";
 
 export const metadata: Metadata = {
   title: "Coin Crush",
@@ -30,7 +31,9 @@ export default function RootLayout({
 
       <body className="antialiased bg-background-default mx-auto">
         <StoreProvider>
+          <PrivyWrapper>
           <RootProvider>{children}</RootProvider>
+          </PrivyWrapper>
         </StoreProvider>
       </body>
     </html>

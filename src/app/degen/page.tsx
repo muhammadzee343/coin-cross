@@ -6,12 +6,15 @@ import { SwipeableCardStack } from "@/components/ui/SwipeableCardStack";
 import SkipCoinIcon from "../../../public/assets/svg/SkipIcon";
 import DetailIcon from "../../../public/assets/svg/DetailIcon";
 import { useFetchCoins } from "@/lib/customHooks/useFetchCoins";
+import { useAuth } from "@/lib/customHooks/useAuth";
+import WalletManagement from "@/components/ui/Login/WallelManagement";
 
 const DegenScreen = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [removedCards, setRemovedCards] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isAllDataFetched, setIsAllDataFetched] = useState(false);
+  const [showWalletManager, setShowWalletManager] = useState(false);
   const currentIndexRef = useRef(currentIndex);
 
   const {
@@ -23,20 +26,19 @@ const DegenScreen = () => {
     fetchNextCoins,
     resetCoins,
   } = useFetchCoins();
+  const {user, handleLinkWallet, getAllWallets } = useAuth();
+  const { embeddedWallets, externalWallets } = getAllWallets();
 
-  // Track index changes
   useEffect(() => {
     currentIndexRef.current = currentIndex;
   }, [currentIndex]);
 
-  // Detect end of list
   useEffect(() => {
     if (!hasMore && coins.length > 0 && currentIndex >= coins.length - 1) {
       setIsAllDataFetched(true);
     }
   }, [currentIndex, coins.length, hasMore]);
 
-  // Initial fetch
   useEffect(() => {
     const fetchInitial = () => {
       const userId = sessionStorage.getItem("userId");
@@ -93,6 +95,63 @@ const DegenScreen = () => {
     }
   };
 
+  const toggleWalletManager = () => {
+    setShowWalletManager(!showWalletManager);
+  };
+  
+  const formatWalletsCount = () => {
+    const total = embeddedWallets.length + externalWallets.length;
+    return `${total} wallet${total !== 1 ? 's' : ''} connected`;
+  };
+
+  const handleWalletConnet = () => {
+    handleLinkWallet()
+  }
+  // {user && (
+  //   <button
+  //     onClick={handleWalletConnet}
+  //     className="bg-primary-blue font-normal text-md py-4 rounded-md mt-4 mx-4"
+  //     disabled={loading}
+  //   >
+  //     {"Connect Solana Wallet"}
+  //   </button>
+  // )}
+  // return(
+  //   <div className="flex flex-col h-full">
+  //     <div className="p-4 bg-gray-900 rounded-lg mt-4 mx-4">
+  //       <div className="flex justify-between items-center">
+  //         <div>
+  //           <h2 className="text-lg font-medium text-primary-white">Wallet Management</h2>
+  //           {(embeddedWallets.length > 0 || externalWallets.length > 0) && (
+  //             <p className="text-sm text-gray-400">{formatWalletsCount()}</p>
+  //           )}
+  //         </div>
+  //         <button
+  //           onClick={toggleWalletManager}
+  //           className="text-primary-blue text-sm font-medium"
+  //         >
+  //           {showWalletManager ? "Hide" : "Manage"}
+  //         </button>
+  //       </div>
+        
+  //       {showWalletManager ? (
+  //         <WalletManagement />
+  //       ) : (
+  //         embeddedWallets.length === 0 && externalWallets.length === 0 && (
+  //           <button
+  //             onClick={handleLinkWallet}
+  //             className="bg-primary-blue py-4 rounded-md mt-4 w-full"
+  //           >
+  //             Link Solana Wallet
+  //           </button>
+  //         )
+  //       )}
+  //     </div>
+      
+  //     {/* Rest of your DegenScreen component */}
+  //     {/* Add your coin swipe UI here */}
+  //   </div>
+  // )
   return isAllDataFetched ? (
     <div className="text-center mt-4">
       <p className="text-lg font-bold">All coins fetched!</p>
