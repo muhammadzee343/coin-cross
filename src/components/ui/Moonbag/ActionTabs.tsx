@@ -21,7 +21,7 @@ export const ActionTabs = ({ solPriceUSD, solBalance }: ActionTabsProps) => {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedAddress = sessionStorage.getItem("walletAddress");
+      const storedAddress = localStorage.getItem("walletAddress");
       setWalletAddress(storedAddress);
     }
   }, []);

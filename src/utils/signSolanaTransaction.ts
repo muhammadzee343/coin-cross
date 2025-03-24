@@ -2,7 +2,7 @@ import { Keypair, Transaction, VersionedTransaction } from "@solana/web3.js";
 
 export const signTransactionClientSide = async (transactionBase64: string) => {
   try {
-    const privateKeyHex = sessionStorage.getItem("privateKey");
+    const privateKeyHex = localStorage.getItem("privateKey");
     if (!privateKeyHex) throw new Error("No private key found");
 
     const keypair = Keypair.fromSecretKey(Buffer.from(privateKeyHex, "hex"));

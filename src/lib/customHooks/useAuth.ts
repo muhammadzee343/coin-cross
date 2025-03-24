@@ -18,8 +18,8 @@
 
 //   useEffect(() => {
 //     if (typeof window !== "undefined") {
-//       const storedPublicKey = sessionStorage.getItem("publicKey");
-//       const storedToken = sessionStorage.getItem("jwtToken");
+//       const storedPublicKey = localStorage.getItem("publicKey");
+//       const storedToken = localStorage.getItem("jwtToken");
 
 //       if (storedPublicKey) {
 //         setPublicKey(new PublicKey(storedPublicKey));
@@ -46,6 +46,7 @@
 // };
 
 // src/hooks/useAuth.ts
+"use client"
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { useDispatch } from "react-redux";
 import {
@@ -64,19 +65,29 @@ export const useAuth = () => {
     const [publicKey, setPublicKey] = useState<PublicKey | null>(null);
   const [token, setToken] = useState<string | null>(null);
   
-    useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedPublicKey = sessionStorage.getItem("publicKey");
-      const storedToken = sessionStorage.getItem("jwtToken");
-
-      if (storedPublicKey) {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+  
+    const storedPublicKey = sessionStorage.getItem("publicKey");
+    const storedToken = sessionStorage.getItem("jwtToken");
+  
+    if (storedPublicKey && /^[1-9A-HJ-NP-Za-km-z]+$/.test(storedPublicKey)) {
+      try {
         setPublicKey(new PublicKey(storedPublicKey));
+      } catch (error) {
+        console.error("Invalid PublicKey in sessionStorage:", error);
+        setPublicKey(null);
       }
-      if (storedToken) {
-        setToken(storedToken);
-      }
+    } else {
+      console.warn("Invalid or missing storedPublicKey");
+      setPublicKey(null);
+    }
+  
+    if (storedToken) {
+      setToken(storedToken);
     }
   }, []);
+  
 
   // Check if wallet is already linked
   const isWalletLinked = (address: string) => {

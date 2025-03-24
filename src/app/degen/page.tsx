@@ -41,8 +41,8 @@ const DegenScreen = () => {
 
   useEffect(() => {
     const fetchInitial = () => {
-      const userId = sessionStorage.getItem("userId");
-      const userToken = sessionStorage.getItem("jwtToken");
+      const userId = localStorage.getItem("userId");
+      const userToken = localStorage.getItem("jwtToken");
       if (userId && userToken) {
         fetchNewCoins(userId, [], 5, userToken);
       }
@@ -60,8 +60,8 @@ const DegenScreen = () => {
 
     // Check if we need to fetch more
     if (currentIndexRef.current >= coins.length - 2 && hasMore && !loading) {
-      const userId = sessionStorage.getItem("userId");
-      const userToken = sessionStorage.getItem("jwtToken");
+      const userId = localStorage.getItem("userId");
+      const userToken = localStorage.getItem("jwtToken");
       if (userId && userToken) {
         fetchNextCoins(userId, updatedRemoved, 5, userToken);
       }
@@ -82,8 +82,8 @@ const DegenScreen = () => {
   };
 
   const handleRestart = () => {
-    const userId = sessionStorage.getItem("userId");
-    const userToken = sessionStorage.getItem("jwtToken");
+    const userId = localStorage.getItem("userId");
+    const userToken = localStorage.getItem("jwtToken");
 
     setCurrentIndex(0);
     setRemovedCards([]);

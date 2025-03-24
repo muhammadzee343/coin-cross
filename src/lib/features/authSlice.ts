@@ -9,14 +9,14 @@
 
 // // Initial state
 // const initialState: AuthState = {
-//   isAuthenticated: typeof window !== "undefined" ? !!sessionStorage.getItem("jwtToken") : false,
+//   isAuthenticated: typeof window !== "undefined" ? !!localStorage.getItem("jwtToken") : false,
 //   isLoading: false,
 //   error: null,
 // };
 
 // export const logoutUser = createAsyncThunk("auth/logout", async (_, { rejectWithValue }) => {
 //   try {
-//     const jwtToken = typeof window !== "undefined" ? sessionStorage.getItem("jwtToken") : null;
+//     const jwtToken = typeof window !== "undefined" ? localStorage.getItem("jwtToken") : null;
 //     if (!jwtToken) {
 //       throw new Error("No JWT token found");
 //     }

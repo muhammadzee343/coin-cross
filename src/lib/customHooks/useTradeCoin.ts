@@ -29,7 +29,7 @@ export const usePurchase = () => {
   
       dispatch(setSignedTransactions(signedTxs));
   
-      const userId = sessionStorage.getItem("userId") || "default_user";
+      const userId = localStorage.getItem("userId") || "default_user";
       const resultBuy = await dispatch(
         executeBuy({
           signedTransactions: signedTxs,
@@ -71,7 +71,7 @@ export const usePurchase = () => {
 
       dispatch(setSignedTransactions(signedTxs));
 
-      const userId = sessionStorage.getItem("userId") || "default_user";
+      const userId = localStorage.getItem("userId") || "default_user";
       const resultSell = await dispatch(
         executeSell({
           signedTransactions: signedTxs,

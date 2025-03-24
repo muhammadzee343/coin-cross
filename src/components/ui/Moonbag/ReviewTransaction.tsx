@@ -37,10 +37,10 @@ export const ReviewTransaction = ({
     const [jwtToken, setJwtToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const jwtToken = sessionStorage.getItem("jwtToken");
+    const jwtToken = localStorage.getItem("jwtToken");
     if (jwtToken) {
       setJwtToken(jwtToken);
-      const senderPublicKey = sessionStorage.getItem("publicKey");
+      const senderPublicKey = localStorage.getItem("publicKey");
       const recipientPublicKey = walletAddress;
       const amountInLamports = solToLamports(Number(amountInSol));
       if (senderPublicKey && recipientPublicKey && amountInLamports) {

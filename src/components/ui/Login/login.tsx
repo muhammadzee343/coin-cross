@@ -43,11 +43,11 @@ export default function Login() {
 
     const authResponse = await response.json();
     if (authResponse?.token && user) {
-      sessionStorage.setItem("jwtToken", authResponse.token);
-      sessionStorage.setItem("hasAuthToken", "true");
-      sessionStorage.setItem("userId", user?.id || "");
-      sessionStorage.setItem("walletAddress", user?.wallet?.address || "");
-      sessionStorage.setItem("publicKey", user?.wallet?.address || "");
+      localStorage.setItem("jwtToken", authResponse.token);
+      localStorage.setItem("hasAuthToken", "true");
+      localStorage.setItem("userId", user?.id || "");
+      localStorage.setItem("walletAddress", user?.wallet?.address || "");
+      localStorage.setItem("publicKey", user?.wallet?.address || "");
       router.push("/home");
     }
   }
