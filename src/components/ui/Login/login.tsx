@@ -108,19 +108,12 @@ export default function Login() {
 
       <button
         onClick={onLoginClick}
-        className="bg-primary-purple font-normal text-md py-4 rounded-md mt-6 mx-4"
-        disabled={loading}
+        className="bg-primary-purple font-normal text-md py-4 rounded-md mt-6 mx-4
+          disabled:opacity-50 disabled:cursor-not-allowed"
+        // disabled={!ready || isLoading}
       >
-        {"Sign in with Email"}
+        Sign in with Email
       </button>
-      <button
-        onClick={onLogoutClick}
-        className="bg-primary-purple font-normal text-md py-4 rounded-md mt-6 mx-4"
-        disabled={loading}
-      >
-        {"Logout with Email"}
-      </button>
-
       {loading && (
         <div className="mt-10 flex justify-center">
           <PuffLoader color="#fff" />

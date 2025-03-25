@@ -5,10 +5,12 @@ import { useAuth } from "@/lib/customHooks/useAuth";
 
 export const Settings = () => {
   const { handleLogout } = useAuth();
- 
+
   return (
     <div className="p-4 relative h-full">
-      <h2 className="text-3xl font-bold mb-8 text-primary-white pt-6">Settings</h2>
+      <h2 className="text-3xl font-bold mb-8 text-primary-white pt-6">
+        Settings
+      </h2>
       <ul className="space-y-5">
         <li>
           <a
@@ -31,7 +33,7 @@ export const Settings = () => {
         <li>
           <a
             href={`https://www.coin-crush.com/terms-of-service`}
-              target="_blank"
+            target="_blank"
             className="flex items-center justify-between p-2 bg-background-dark px-4 py-3 border-white border-[1px] rounded-full text-white"
           >
             Terms of service
@@ -41,7 +43,7 @@ export const Settings = () => {
         <li>
           <a
             href={`https://www.coin-crush.com/privacy-policy`}
-              target="_blank"
+            target="_blank"
             className="flex items-center justify-between p-2 bg-background-dark px-4 py-3 border-white border-[1px] rounded-full text-white"
           >
             Privacy policy

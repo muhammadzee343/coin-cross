@@ -56,26 +56,28 @@ import {
 } from "../features/authSlice";
 import { MouseEvent, useEffect, useState } from "react";
 import { PublicKey } from "@solana/web3.js";
+import { useRouter } from "next/navigation";
 
 export const useAuth = () => {
   const { login, logout, user, linkWallet, unlinkWallet, ready: privyReady } = usePrivy();
   const { wallets, ready: walletsReady } = useWallets();
   const dispatch = useDispatch();
-
-    const [publicKey, setPublicKey] = useState<PublicKey | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const router = useRouter()
   
+  const [publicKey, setPublicKey] = useState<PublicKey | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
   
-    const storedPublicKey = sessionStorage.getItem("publicKey");
-    const storedToken = sessionStorage.getItem("jwtToken");
+    const storedPublicKey = localStorage.getItem("publicKey");
+    const storedToken = localStorage.getItem("jwtToken");
   
     if (storedPublicKey && /^[1-9A-HJ-NP-Za-km-z]+$/.test(storedPublicKey)) {
       try {
         setPublicKey(new PublicKey(storedPublicKey));
       } catch (error) {
-        console.error("Invalid PublicKey in sessionStorage:", error);
+        console.error("Invalid PublicKey in localStorage:", error);
         setPublicKey(null);
       }
     } else {
@@ -87,7 +89,6 @@ export const useAuth = () => {
       setToken(storedToken);
     }
   }, []);
-  
 
   // Check if wallet is already linked
   const isWalletLinked = (address: string) => {
@@ -111,6 +112,9 @@ export const useAuth = () => {
     try {
       await logout();
       dispatch(logoutSuccess());
+      localStorage.clear()
+      router.replace('/login')
+      window.location.reload();
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -122,6 +126,7 @@ export const useAuth = () => {
       
       if (user) {
         dispatch(loginSuccess(user));
+        
       }
     } catch (error) {
       console.error("Link wallet error:", error);
