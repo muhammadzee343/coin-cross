@@ -60,6 +60,7 @@ export const SwipeableCardStack = ({
                     title={card?.metadata?.name}
                     description={card?.metadata?.description}
                     fdvUsd={card?.coinGeckoData?.fdvUsd}
+                    topTenHolders={card?.holderUpdate?.top10HoldersPercentage}
                     marketCapChange_24h={
                       card?.coinGeckoData?.coinGeckoPoolData?.[0]
                         ?.priceChangeH24 ?? "N/A"

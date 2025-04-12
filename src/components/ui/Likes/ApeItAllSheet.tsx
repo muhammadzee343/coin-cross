@@ -202,7 +202,7 @@ export const ApeItAllSheet = ({
           className={`w-full mb-1 rounded-xl px-[20px] py-[10px] ${
             amountInUSD > 0 && amountInUSD > amount
               ? "bg-primary-green"
-              : "bg-[#cc7204]"
+              : "bg-[#FA8441]"
           }`}
           onClick={
             isCoinDump
