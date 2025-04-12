@@ -71,7 +71,7 @@ export const SwipeableCard = ({
         transition: isDragging ? "none" : "transform 0.5s ease",
         cursor: isDragging ? "grabbing" : "grab",
         position: "relative",
-        height: "calc(100vh - 220px)", 
+        height: "calc(100vh - 230px)", 
         maxHeight: "700px",
       }}
     >
