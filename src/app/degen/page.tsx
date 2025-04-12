@@ -164,7 +164,7 @@ const DegenScreen = () => {
     </div>
   ) : (
     <div className="flex flex-col justify-between h-full flex-1">
-      <div className="min-h-[50vh]">
+      <div >
         {coins.length > 0 && (
           <SwipeableCardStack
             cards={coins}
@@ -177,7 +177,7 @@ const DegenScreen = () => {
           />
         )}
       </div>
-      <div className="md:pb-4 pb-2 flex justify-center">
+      <div className="md:pb-4 pb-2 flex justify-center absolute bottom-0 left-[10px] right-[10px]">
         <div className="w-full md:p-[22px] p-[16px] flex justify-between items-center md:border-[5px] border-[4px] shadow-[0_0px_3px_rgba(0,0,0,1)] border-primary-black md:rounded-[32px] rounded-[24px]">
           <button
             onClick={() => handleSwipe("left")}
