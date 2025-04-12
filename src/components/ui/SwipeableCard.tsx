@@ -109,7 +109,7 @@ export const SwipeableCard = ({
             <h4 className="text-base md:text-lg font-amalta font-normal text-primary-light leading-none">
               market cap
             </h4>
-            <p className="text-base md:text-lg font-inter font-normal text-primary-light">
+            <p className="text-base md:text-lg font-sf font-normal text-primary-light">
               {formatNumber(Number(fdvUsd))}
             </p>
           </div>
@@ -118,7 +118,7 @@ export const SwipeableCard = ({
             <h4 className="text-base md:text-lg font-amalta font-normal text-primary-light leading-none">
               change 24h
             </h4>
-            <p className={`text-base md:text-lg font-inter font-normal leading-tight ${
+            <p className={`text-base md:text-lg font-sf font-normal leading-tight ${
               Number(marketCapChange_24h) >= 0 ? 'text-text-green' : 'text-text-negative'
             }`}>
               {formatNumber(Number(marketCapChange_24h))}%
@@ -129,7 +129,7 @@ export const SwipeableCard = ({
             <h4 className="text-base md:text-lg font-amalta font-normal text-primary-light leading-none">
               top ten holders
             </h4>
-            <p className={`text-base md:text-lg font-inter font-normal leading-tight ${
+            <p className={`text-base md:text-lg font-sf font-normal leading-tight ${
               Number(topTenHolders) >= 0 ? 'text-text-green' : 'text-text-negative'
             }`}>
               {formatNumber(Number(topTenHolders))}%
@@ -140,7 +140,7 @@ export const SwipeableCard = ({
             <h4 className="text-base md:text-lg font-amalta font-normal text-primary-light leading-none">
               created
             </h4>
-            <p className="text-base md:text-lg font-inter font-normal text-primary-light">
+            <p className="text-base md:text-lg font-sf font-normal text-primary-light">
               {formatDateTime(coinCreated)}
             </p>
           </div>

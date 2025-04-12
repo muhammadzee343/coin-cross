@@ -66,6 +66,15 @@
     font-style: normal;
     font-display: swap;
   }
+
+  @font-face {
+    font-family: 'SF Pro';
+    src: url('/fonts/sf-pro-display-regular.woff2') format('woff2'),
+         url('/fonts/sf-pro-display-regular.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
 }
 
 :root {

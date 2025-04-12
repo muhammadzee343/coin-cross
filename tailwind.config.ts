@@ -64,6 +64,7 @@ export default {
         amalta: ["Amalta", "sans-serif"],
         futura: ["Futura", "sans-serif"],
         inter: ["Inter", "sans-serif"],
+        sf: ['SF Pro', 'sans-serif'],
       },
     },
     screens: {
