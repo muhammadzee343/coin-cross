@@ -91,13 +91,13 @@ export const SwipeableCard = ({
         )}
       </div>
 
-      <div className="px-4 py-5 text-primary-white flex flex-col h-1/2">
+      <div className="px-4 text-primary-white flex flex-col h-1/2">
         <h3 className="block w-full font-amalta font-normal text-3xl md:text-4xl text-center mb-4">
           {title === "POV" ? "You Held" : title}
         </h3>
         
         {description && (
-          <div className="flex-grow overflow-y-auto mb-4">
+          <div className="flex-grow overflow-y-auto">
             <p className="font-inter font-normal text-base leading-snug">
               {description}
             </p>
