@@ -8,7 +8,7 @@ import { formatDateTime, formatNumber } from "@/utils/utils";
 interface SwipeableCardProps {
   imageUrl: string;
   title: string;
-  description: string;
+  description?: string; // Made optional since some cards might not have descriptions
   fdvUsd: string;
   marketCapChange_24h: string;
   coinCreated: string;
@@ -59,7 +59,7 @@ export const SwipeableCard = ({
   return (
     <div
       {...handlers}
-      className="w-full border-[5px] border-primary-black rounded-[32px] shadow-lg overflow-hidden"
+      className="w-full border-4 md:border-5 border-primary-black rounded-3xl md:rounded-4xl shadow-lg overflow-hidden bg-background-card"
       style={{
         transform: isDragging
           ? `translate(${position.x}px, ${position.y}px) rotate(${
@@ -69,54 +69,68 @@ export const SwipeableCard = ({
         transition: isDragging ? "none" : "transform 0.5s ease",
         cursor: isDragging ? "grabbing" : "grab",
         position: "relative",
+        height: "calc(100vh - 250px)", 
+        maxHeight: "700px",
       }}
     >
-      <div className="relative md:min-h-72 sm:min-h-56 min-h-48 h-auto w-full">
+      <div className="relative w-full h-1/2">
         <Image
           src={imageUrl}
           alt={title}
           fill
-          className="object-cover rounded-[32px] "
+          className="object-cover"
           priority
         />
+        
+        {title === "POV" && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <h1 className="text-white text-7xl md:text-8xl font-bold">POV</h1>
+          </div>
+        )}
       </div>
 
-      <div className="px-4 py-6 bg-background-card text-primary-white">
-        <h3 className="block w-full font-amalta font-normal text-[32px] text-center">
-          {title}
+      <div className="px-4 py-5 text-primary-white flex flex-col h-1/2">
+        <h3 className="block w-full font-amalta font-normal text-3xl md:text-4xl text-center mb-4">
+          {title === "POV" ? "You Held" : title}
         </h3>
-        <p className={`font-inter font-normal text-[17px] leading-[20px] md:py-8 py-4 h-[100px] overflow-y-auto`}>
-          {description}
-        </p>
-        <div className="flex flex-row justify-between pb-[5px] mt-[10px]">
-          <h4
-            className={`md:text-[16px] sm:text-[15px] font-amalta font-normal text-primary-light leading-none`}
-          >
-            {"market cap"}
-          </h4>
-          <p className="md:text-[16px] sm:text-[15px] font-inter font-normal text-primary-light leading-tight">
-            {formatNumber(Number(fdvUsd))}
-          </p>
-        </div>
-        <div className="flex flex-row justify-between pb-[5px]">
-          <h4
-            className={`md:text-[16px] sm:text-[15px] font-amalta font-normal text-primary-light leading-none`}
-          >
-            {"change 24h"}
-          </h4>
-          <p className={`md:text-[16px] sm:text-[15px] font-inter font-normal text-primary-light leading-tight ${Number(marketCapChange_24h)>=0 ? 'text-text-green':'text-text-negative'}`}>
-            {marketCapChange_24h}
-          </p>
-        </div>
-        <div className="flex flex-row justify-between">
-          <h4
-            className={`md:text-[16px] sm:text-[15px] font-amalta font-normal text-primary-light leading-none`}
-          >
-            {"created"}
-          </h4>
-          <p className="md:text-[16px] sm:text-[15px] font-inter font-normal text-primary-light leading-tight">
-            {formatDateTime(coinCreated)}
-          </p>
+        
+        {description && (
+          <div className="flex-grow overflow-y-auto mb-4">
+            <p className="font-inter font-normal text-base leading-snug">
+              {description}
+            </p>
+          </div>
+        )}
+        
+        <div className="mt-auto space-y-2">
+          <div className="flex flex-row justify-between">
+            <h4 className="text-base md:text-lg font-amalta font-normal text-primary-light leading-none">
+              market cap
+            </h4>
+            <p className="text-base md:text-lg font-inter font-normal text-primary-light">
+              {formatNumber(Number(fdvUsd))}
+            </p>
+          </div>
+          
+          <div className="flex flex-row justify-between">
+            <h4 className="text-base md:text-lg font-amalta font-normal text-primary-light leading-none">
+              change 24h
+            </h4>
+            <p className={`text-base md:text-lg font-inter font-normal leading-tight ${
+              Number(marketCapChange_24h) >= 0 ? 'text-text-green' : 'text-text-negative'
+            }`}>
+              {marketCapChange_24h}
+            </p>
+          </div>
+          
+          <div className="flex flex-row justify-between">
+            <h4 className="text-base md:text-lg font-amalta font-normal text-primary-light leading-none">
+              created
+            </h4>
+            <p className="text-base md:text-lg font-inter font-normal text-primary-light">
+              {formatDateTime(coinCreated)}
+            </p>
+          </div>
         </div>
       </div>
     </div>
