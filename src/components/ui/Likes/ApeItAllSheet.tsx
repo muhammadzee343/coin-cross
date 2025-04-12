@@ -168,7 +168,7 @@ export const ApeItAllSheet = ({
     reFetchPortfolio();
   }, []);
   return (
-    <div className="relative">
+    <div className="relative px-4">
       {errorDisplay}
       {loadingOverlay}
 
