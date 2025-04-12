@@ -28,7 +28,7 @@ export const ApeItAllSheet = ({
 }: ApeItSheetProps) => {
   const { initiatePurchase, initiateSell } = usePurchase();
   const { publicKey, token } = useAuth();
-  const { data } = useRefreshPortfolio();
+  const { loading, data, fetchPortfolio } = useRefreshPortfolio();
   const [sliderValue, setSliderValue] = useState<number>(5);
   const [sellPercentage, setSellPercentage] = useState<number>(5);
   const [showSolanaWalletQR, setShowSolanaWalletQR] = useState<boolean>(false);
@@ -55,10 +55,6 @@ export const ApeItAllSheet = ({
     () => Number((solBalance * USDPrice).toFixed(2)),
     [solBalance, USDPrice]
   );
-
-  useEffect(() => {
-    setSellPercentage(sliderValue * mints.length);
-  }, [sliderValue, mints.length]);
 
   const showError = useCallback((message: string) => {
     setErrorMessage(message);
@@ -155,6 +151,22 @@ export const ApeItAllSheet = ({
     );
   }, [transactionState]);
 
+  const reFetchPortfolio = async () => {
+    if (!publicKey) return;
+    try {
+      await fetchPortfolio(publicKey.toBase58(), token || "");
+    } catch (err) {
+      console.error("Error refreshing portfolio:", err);
+    }
+  };
+
+  useEffect(() => {
+    setSellPercentage(sliderValue * mints.length);
+  }, [sliderValue, mints.length]);
+
+  useEffect(() => {
+    reFetchPortfolio();
+  }, []);
   return (
     <div className="relative">
       {errorDisplay}
@@ -208,15 +220,13 @@ export const ApeItAllSheet = ({
         </button>
       </div>
 
-      <Typography
-        variant="caption1"
-        className={`text-[10px] text-secondary-gray mt-4 ${inter.className}`}
+      <div className="flex justify-center items-center">
+      <span
+        className={`text-[10px] text-primary-light px-8 pb-8 text-center ${inter.className}`}
       >
-        {"Additional refundable rent -$0.35. this amount will be deducted from your balance.".slice(
-          0,
-          51
-        ) + "..."}
-      </Typography>
+          "Additional refundable rent -$0.35. This amount will be returned when you sell your coins.
+      </span>
+      </div>
 
       <div className="fixed bottom-0 z-10 bg-background-default">
         <BottomSheet

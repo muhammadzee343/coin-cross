@@ -52,7 +52,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 50, stiffness: 500 }}
-              className={`w-full max-w-[620px] shadow-lg ${
+              className={`w-full max-w-[620px] shadow-lg relative ${
                 !hideHandle
                   ? "rounded-t-[10px] border-t border-x border-gray-600"
                   : ""

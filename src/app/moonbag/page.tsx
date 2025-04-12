@@ -2,20 +2,11 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ActionTabs } from "@/components/ui/Moonbag/ActionTabs";
-import { CoinCard } from "@/components/ui/Moonbag/CoinCard";
-import Image from "next/image";
-import { BottomSheet } from "@/components/ui/BottomSheet";
-import { ApeItAllSheet } from "@/components/ui/Likes/ApeItAllSheet";
 import { CoinTypes } from "@/types/coins";
-import { PublicKey } from "@solana/web3.js";
 import { useRefreshPortfolio } from "@/lib/customHooks/useProfolio";
 import PuffLoader from "react-spinners/PuffLoader";
 import { lamportsToSol } from "@/utils/lamportsToSol";
-import { CardDetails } from "@/components/ui/Degen/CardDetails";
 import { useSolana } from "@/lib/customHooks/useSolana";
-import { calculatePnL } from "@/utils/utils";
-import { calculateCurrentValue } from "@/utils/utils";
-import { formatBalance } from "@/utils/utils";
 import { PortfolioSummary } from "./PortfolioSummary";
 import CoinList from "./CoinList";
 import { useAuth } from "@/lib/customHooks/useAuth";
@@ -171,7 +162,11 @@ const MoonbagScreen = () => {
             />
           )}
 
-          <ConditionalBottomSheets state={state} setState={setState} />
+          <ConditionalBottomSheets
+            state={state}
+            setState={setState}
+            moongbagCoins={moongbagCoins}
+          />
         </div>
       )}
     </div>

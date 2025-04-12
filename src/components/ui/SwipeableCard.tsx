@@ -3,12 +3,13 @@
 import React, { useState } from "react";
 import { useSwipeable, SwipeEventData } from "react-swipeable";
 import Image from "next/image";
+import { formatDateTime, formatNumber } from "@/utils/utils";
 
 interface SwipeableCardProps {
   imageUrl: string;
   title: string;
   description: string;
-  marketCapValue: string;
+  fdvUsd: string;
   marketCapChange_24h: string;
   coinCreated: string;
   onSwipe?: (direction: "left" | "right" | "up" | "down") => void;
@@ -18,7 +19,7 @@ export const SwipeableCard = ({
   imageUrl,
   title,
   description,
-  marketCapValue,
+  fdvUsd,
   marketCapChange_24h,
   coinCreated,
   onSwipe,
@@ -81,10 +82,10 @@ export const SwipeableCard = ({
       </div>
 
       <div className="px-4 py-6 bg-background-card text-primary-white">
-        <h3 className="text-center lg:text-[32px] md:text-[30px] sm:text-[26px] leading-none mb-3">
+        <h3 className="block w-full font-amalta font-normal text-[32px] text-center">
           {title}
         </h3>
-        <p className={`md:text-[17px] sm:text-[15px] font-inter font-normal text-primary-light leading-tight md:pb-8 pb-4 h-[100px] overflow-y-auto`}>
+        <p className={`font-inter font-normal text-[17px] leading-[20px] md:py-8 py-4 h-[100px] overflow-y-auto`}>
           {description}
         </p>
         <div className="flex flex-row justify-between pb-[5px] mt-[10px]">
@@ -94,7 +95,7 @@ export const SwipeableCard = ({
             {"market cap"}
           </h4>
           <p className="md:text-[16px] sm:text-[15px] font-inter font-normal text-primary-light leading-tight">
-            {marketCapValue}
+            {formatNumber(Number(fdvUsd))}
           </p>
         </div>
         <div className="flex flex-row justify-between pb-[5px]">
@@ -103,7 +104,7 @@ export const SwipeableCard = ({
           >
             {"change 24h"}
           </h4>
-          <p className="md:text-[16px] sm:text-[15px] font-inter font-normal text-primary-light leading-tight">
+          <p className={`md:text-[16px] sm:text-[15px] font-inter font-normal text-primary-light leading-tight ${Number(marketCapChange_24h)>=0 ? 'text-text-green':'text-text-negative'}`}>
             {marketCapChange_24h}
           </p>
         </div>
@@ -114,7 +115,7 @@ export const SwipeableCard = ({
             {"created"}
           </h4>
           <p className="md:text-[16px] sm:text-[15px] font-inter font-normal text-primary-light leading-tight">
-            {coinCreated}
+            {formatDateTime(coinCreated)}
           </p>
         </div>
       </div>

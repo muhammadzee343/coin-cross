@@ -45,10 +45,10 @@ export const ScanQR = ({ amount, amountInSol, setIsWithdrawQROpen, setIsScanQROp
         Scan QR
       </Button>
 
-      <div className="fixed bottom-8 w-full px-[12px]">
+      <div className="fixed bottom-8 w-full px-[12px] flex justify-center">
         <button
           onClick={() => setIsReviewTransactionOpen(true)}
-          className={`w-full py-2 text-white text-md font-normal rounded mt-4 bg-primary-green`}
+          className={`w-full text-md font-normal rounded-2xl mt-4 bg-primary-green max-w-[580px] mx-auto px-[20px] py-[18px] text-black text-2xl`}
         >
           Next
         </button>

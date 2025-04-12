@@ -44,6 +44,8 @@ export default {
           primary: "var(--text-primary)",
           secondary: "var(--text-secondary)",
           green: "var(--text-green)",
+          gray: "var(--text-gray)",
+          negative: "var(--text-negative)",
         },
         error: "var(--error)",
         warning: "var(--warning)",

@@ -1,12 +1,18 @@
 import { usePrepareTransaction } from "@/lib/customHooks/useWithdrawTransaction";
 import { lamportsToSol } from "@/utils/lamportsToSol";
 import { solToLamports } from "@/utils/solToLamports";
-import { signTransactionClientSide } from "@/utils/signSolanaTransaction";
-import { VersionedTransaction } from "@solana/web3.js";
-import { Transaction } from "@solana/web3.js";
 import React, { useEffect, useState } from "react";
 import { IoChevronBackSharp } from "react-icons/io5";
 import PuffLoader from "react-spinners/PuffLoader";
+import {
+  PublicKey,
+  Transaction,
+  Connection,
+  SystemProgram,
+  clusterApiUrl,
+  VersionedTransaction,
+} from "@solana/web3.js";
+import { useAuth } from "@/lib/customHooks/useAuth";
 
 interface ReviewTransactionProps {
   setIsReviewTransactionOpen: (open: boolean) => void;
@@ -25,16 +31,20 @@ export const ReviewTransaction = ({
   setIsWithdrawQROpen,
   setIsScanQROpen,
 }: ReviewTransactionProps) => {
-  const { prepareTx,
+  const { useExtendedPrivy } = useAuth();
+  const { ready, wallet } = useExtendedPrivy();
+  const {
+    prepareTx,
     sendSignedTx,
     preparedData,
     isPrepareLoading,
     isSending,
     isConfirming,
-    error } = usePrepareTransaction();
+    error,
+  } = usePrepareTransaction();
 
-    const [currentError, setCurrentError] = useState<string | null>(null);
-    const [jwtToken, setJwtToken] = useState<string | null>(null);
+  const [currentError, setCurrentError] = useState<string | null>(null);
+  const [jwtToken, setJwtToken] = useState<string | null>(null);
 
   useEffect(() => {
     const jwtToken = localStorage.getItem("jwtToken");
@@ -44,7 +54,12 @@ export const ReviewTransaction = ({
       const recipientPublicKey = walletAddress;
       const amountInLamports = solToLamports(Number(amountInSol));
       if (senderPublicKey && recipientPublicKey && amountInLamports) {
-        prepareTx(senderPublicKey, recipientPublicKey, amountInLamports, jwtToken);
+        prepareTx(
+          senderPublicKey,
+          recipientPublicKey,
+          amountInLamports,
+          jwtToken
+        );
       }
     }
   }, []);
@@ -52,30 +67,44 @@ export const ReviewTransaction = ({
   const handleConfirmTransaction = async () => {
     try {
       setCurrentError(null);
-      
+
       if (!preparedData?.transactionBase64 || !jwtToken) {
         throw new Error("Missing transaction data or authentication");
       }
-  
-      const signedTx = await signTransactionClientSide(preparedData.transactionBase64);
-      
+
+      const decodedTx = Buffer.from(preparedData.transactionBase64, "base64");
+      const connection = new Connection(clusterApiUrl("devnet"));
+
+      let transaction: Transaction | VersionedTransaction;
       try {
-        const txBuffer = Buffer.from(signedTx, "base64");
-        const tx = VersionedTransaction.deserialize(txBuffer) || Transaction.from(txBuffer);
+        transaction = VersionedTransaction.deserialize(decodedTx);
       } catch (e) {
-        throw new Error("Invalid transaction format after signing");
+        transaction = Transaction.from(decodedTx);
       }
 
-      await sendSignedTx(signedTx, jwtToken);
-  
+      if (transaction instanceof Transaction) {
+        const { blockhash } = await connection.getLatestBlockhash();
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = new PublicKey(
+          localStorage.getItem("publicKey")!
+        );
+      }
+
+      const signedTransaction = await wallet.signTransaction(transaction);
+
+      const serializedTx = signedTransaction.serialize();
+      const txBuffer = Buffer.from(serializedTx);
+
+      await sendSignedTx(txBuffer.toString("base64"), jwtToken);
+
       setIsReviewTransactionOpen(false);
       setIsWithdrawQROpen(false);
       setIsScanQROpen(false);
-  
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error?.message || 
-                          error.message || 
-                          "Transaction failed for unknown reason";
+      const errorMessage =
+        error.response?.data?.error?.message ||
+        error.message ||
+        "Transaction failed";
       setCurrentError(errorMessage);
       console.error("Transaction Error:", error);
     }

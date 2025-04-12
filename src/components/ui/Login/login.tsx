@@ -6,16 +6,7 @@ import { useRouter } from "next/navigation";
 import PuffLoader from "react-spinners/PuffLoader";
 import { useAuth } from "@/lib/customHooks/useAuth";
 import { usePrivy } from "@privy-io/react-auth";
-
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: {
-        init: () => void;
-      };
-    };
-  }
-}
+import { expandTelegramWebApp, isRunningInTelegram, setTelegramWebAppReady } from "@/utils/telegramWebApp";
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
@@ -25,6 +16,13 @@ export default function Login() {
   const router = useRouter();
 
   async function exchangeTokenForJWT(privyToken: string) {
+    const solanaWallet = user?.linkedAccounts?.find(
+      (account) =>
+        account.type === "wallet" &&
+        "chainType" in account && // Ensure it's a wallet object
+        account.chainType === "solana"
+    ) as { address: string } | undefined; 
+
     const response = await fetch("https://api.coin-crush.com/v1/auth/token", {
       method: "POST",
       headers: {
@@ -42,16 +40,19 @@ export default function Login() {
     if (!response.ok) throw new Error("Token exchange failed");
 
     const authResponse = await response.json();
+    console.log(authResponse, "authResponse")
     if (authResponse?.token && user) {
       localStorage.setItem("jwtToken", authResponse.token);
       localStorage.setItem("hasAuthToken", "true");
       localStorage.setItem("userId", user?.id || "");
-      localStorage.setItem("walletAddress", user?.wallet?.address || "");
-      localStorage.setItem("publicKey", user?.wallet?.address || "");
+      if (solanaWallet) {
+        localStorage.setItem("publicKey", solanaWallet.address);
+        localStorage.setItem("walletAddress", solanaWallet.address); // Store Solana wallet separately
+      }
       router.push("/home");
     }
   }
-
+console.log(user, "user")
   useEffect(() => {
     const fetchToken = async () => {
       if (authenticated) {
@@ -68,6 +69,15 @@ export default function Login() {
 
     fetchToken();
   }, [authenticated, user]);
+
+  // Initialize Telegram WebApp when component mounts
+  useEffect(() => {
+    // Try to expand the WebApp to full screen
+    if (isRunningInTelegram()) {
+      expandTelegramWebApp();
+      setTelegramWebAppReady();
+    }
+  }, []);
 
   const onLoginClick = async () => {
     setLoading(true);
@@ -88,7 +98,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col justify-between h-full flex-1 mt-[25px]">
+    <div className="flex flex-col justify-between h-full flex-1 mt-[25px] max-w-[480px] overflow-hidden mx-auto pt-12 pb-12">
       <div className="flex flex-row gap-2">
         <FaLessThan className="text-primary-purple" />
         <p

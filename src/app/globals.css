@@ -86,7 +86,7 @@
   --primary-black: #000000;
   --primary-green: #0cb951;
   --primary-lightGray: #575656;
-  --primary-gray: #8e8e93;
+  --primary-gray: #404040;
   /* --primary-gray-tabs: rgba(120, 120, 128, 0.161); */
   --primary-gray-tabs: #404040;
 
@@ -108,7 +108,10 @@
   --text-primary: #111827;
   --text-primary-light: #8e8e93;
   --text-secondary: #4b5563;
-  --text-green: #0cb951;
+  --text-green: #34C759;
+  --text-white: #fff;
+  --text-gray: #7D7D7D;
+  --text-negative: #FF2D55;
 
   --error: #ef4444;
   --warning: #f59e0b;
@@ -125,10 +128,15 @@
   /* --max-width: 390px; */
 }
 
-/* Base styles */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 body {
-  /* Use Telegram's theme variables */
-  /* background: var(--tg-theme-bg-color); */
+  background-color: var(--tg-theme-bg-color);
   color: var(--tg-theme-text-color);
   margin: 0 auto;
   min-height: 100vh;

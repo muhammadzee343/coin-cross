@@ -49,3 +49,35 @@ export const calculatePnL = (
     }),
   };
 };
+
+
+export const formatNumber = (num: number) => {
+  if (num >= 1_000_000_000) {
+    return (num / 1_000_000_000).toFixed(2) + "B";
+  } else if (num >= 1_000_000) {
+    return (num / 1_000_000).toFixed(2) + "M";
+  } else if (num >= 1_000) {
+    return (num / 1_000).toFixed(2) + "K";
+  }
+  return num.toFixed(2);
+};
+
+export const formatDateTime = (dateString: string) => {
+  const now = new Date();
+  const createdDate = new Date(dateString);
+
+  if (isNaN(createdDate.getTime())) {
+    return "Invalid date"; 
+  }
+
+  const diffMs = now.getTime() - createdDate.getTime();
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffDays > 0) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+  if (diffHours > 0) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+  if (diffMinutes > 0) return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
+  return "just now";
+};

@@ -127,29 +127,27 @@ export const AddSolanaQR = ({
           </p>
         </div>
         <div className="w-[35%] text-right">
-          <Button
-            variant="secondary"
-            className="rounded-lg font-amalta px-1 leading-snug"
+          <button
+            className="w-full rounded-xl bg-secondary-greenButton py-[10px] font-amalta font-normal text-[16px]"
             onClick={handleCopy}
           >
             {copied ? "Copied!" : "Copy"}
-          </Button>
+          </button>
         </div>
       </div>
 
-      <p className="md:text-[14px] sm:text-[12px] font-amalta font-normal text-primary-white leading-tight mt-[15px] text-center p-[10px]">
+      <p className="md:text-[16px] sm:text-[14px] font-amalta font-normal text-primary-light leading-tight mt-[15px] text-center p-[10px]">
         Use this address to receive SOL tokens or Solana-based memecoins.
         Transactions may take a few seconds to confirm.
       </p>
 
       <div className="w-full flex items-center justify-center absolute bottom-4  p-[10px]">
-        <Button
-          variant="secondary"
-          className="w-full rounded-xl font-amalta md:py-7 py-5 md:text-[22px] text-[20px]"
+        <button
+          className="w-full rounded-2xl bg-secondary-greenButton font-amalta font-normal px-[20px] py-[18px] text-black text-2xl"
           onClick={handleShare}
         >
           Share
-        </Button>
+        </button>
       </div>
     </div>
   );

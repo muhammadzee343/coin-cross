@@ -33,26 +33,26 @@ export const LikesCard: React.FC<LikesCardProps> = ({
           <Image
             src={imageUrl}
             alt={"test"}
-            width={100}
-            height={100}
-            className="rounded-lg object-cover h-[30px] w-[30px]"
+            width={44}
+            height={44}
+            className="rounded-[10px] object-cover h-[44px] w-[44px]"
           />
 
           <div className="flex flex-1 justify-between items-center ml-4">
-            <div>
-              <Typography variant="caption1" className="text-primary-white">
+            <div className="flex flex-col">
+              <label className="font-amalta font-normal text-[16px] text-primary-white">
                 {title}
-              </Typography>
-              <Typography variant="caption1" className="text-primary-white">
+              </label>
+              <label className="font-amalta font-normal text-[16px] text-primary-light">
                 ${parseFloat(priceUSD).toFixed(2)}
-              </Typography>
+              </label>
             </div>
 
             <button
               onClick={(e) => handleRemove(e, id)}
               className="text-[var(--tg-theme-hint-color)]"
             >
-              <IoMdClose size={20} color="#0a8d" />
+              <IoMdClose size={20} color="#FF2D55" className="font-black"/>
             </button>
           </div>
         </div>

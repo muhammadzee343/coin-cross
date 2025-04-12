@@ -24,7 +24,7 @@ export const Tabs = ({ tabs, defaultTab, onChange }: TabsProps) => {
   };
 
   return (
-    <div className="bg-background-default w-full h-[40px] z-20">
+    <div className="bg-background-default w-full h-[46px] z-20 py-[12px] px-[10px]">
       <div className="flex justify-between items-center mx-auto">
         {tabs.map((tab) => (
           <button

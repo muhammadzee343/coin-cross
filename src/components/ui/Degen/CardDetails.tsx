@@ -21,7 +21,7 @@ export const CardDetails = ({
 
   return (
     <div className="relative max-h-[82vh] overflow-y-auto">
-      <div className="w-full h-[150px]">
+      <div className="w-full md:h-[250px] h-[200px]">
         <div className="relative w-full h-full">
           <Image
             src={card?.metadata?.image}
@@ -48,7 +48,7 @@ export const CardDetails = ({
 
         <div className="flex gap-2 mb-[10px]">
           <button
-            className="w-full rounded-xl bg-secondary-greenButton px-[20px] py-[10px]"
+            className="w-[98%] mx-auto rounded-3xl bg-secondary-greenButton px-[20px] py-[18px] text-black text-2xl"
             onClick={() => setApeItAllOpen(true)}
           >
             Pump it
@@ -65,14 +65,20 @@ export const CardDetails = ({
 
         <CoinDetailCard coin={card} />
 
-        <Typography
-          variant="body1"
-          className={`text-[10px] text-secondary-gray`}
+        <label
+          className={`text-[13px] text-text-gray p-2 font-futura font-medium`}
         >
-          {
-            "Coin cross is not a cryptocurrency. It is a community-driven project that allows users to create and manage their own tokens on the TON blockchain."
-          }
-        </Typography>
+          Coin Crush is not a cryptocurrency exchange and does not offer investment advice. The content within 
+          this app is for informational purposes only and should not be interpreted as financial guidance, an 
+          offer, solicitation, or recommendation for any product or service. Meme-based cryptocurrencies have no 
+          inherent value or utility and exist purely for entertainment. They should not be regarded as investments,
+           currencies, or assets of any kind. The price of memecoins is highly volatile and unpredictable, and 
+           displayed price data may be delayed or inaccurate. All swaps occur directly on the blockchain through 
+           the self-custodial wallet linked to your account. Coin Crush charges a fee on each buy and sell 
+           transaction to cover operational costs, which fluctuate based on network congestion and gas fees. 
+           As a visual interface for decentralized exchanges, Coin Crush does not create, develop, maintain, 
+           or directly facilitate cryptocurrency transactions."
+        </label>
       </div>
 
       <BottomSheet

@@ -64,7 +64,7 @@ export const Onboarding = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-transparent">
+    <div className="flex flex-col h-screen bg-transparent max-w-[480px] overflow-hidden mx-auto">
       <div className="flex flex-1 flex-col items-center justify-start px-0">
         <div className="flex-1 flex flex-col items-center justify-center px-0">
           {/* Image */}

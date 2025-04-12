@@ -10,7 +10,12 @@
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "rebuild": "npm rebuild && npm run build",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "dev:clean": "rm -rf .next && next dev",
+    "build:clean": "rm -rf .next && next build",
+    "tg:dev": "NEXT_PUBLIC_IS_TELEGRAM_APP=true rm -rf .next && next dev",
+    "tg:build": "NEXT_PUBLIC_IS_TELEGRAM_APP=true rm -rf .next && next build",
+    "vercel-build": "npm run tg:build"
   },
   "dependencies": {
     "@babel/runtime": "^7.26.9",

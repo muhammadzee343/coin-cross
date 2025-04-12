@@ -47,7 +47,7 @@ export const SwipeableCardStack = ({
               <div key={card.coinId}>
                 <div
                   key={card.coinId}
-                  className="absolute top-0 left-0 right-0 w-full"
+                  className="absolute top-0 left-0 right-0 w-full max-h-[300px]"
                   style={{
                     transform: `scale(${1 - (index - currentIndex) * 0.05})`,
                     zIndex: isTop ? 10 : 1,
@@ -59,7 +59,7 @@ export const SwipeableCardStack = ({
                     imageUrl={card?.metadata?.image}
                     title={card?.metadata?.name}
                     description={card?.metadata?.description}
-                    marketCapValue={card?.coinGeckoData?.marketCapUsd}
+                    fdvUsd={card?.coinGeckoData?.fdvUsd}
                     marketCapChange_24h={
                       card?.coinGeckoData?.coinGeckoPoolData?.[0]
                         ?.priceChangeH24 ?? "N/A"
@@ -69,9 +69,9 @@ export const SwipeableCardStack = ({
                   />
                 </div>
 
-                <div className="fixed bottom-0 z-10">
+                <div className="absolute bottom-0 z-10">
                   <BottomSheet
-                    className="bg-background-card"
+                    className="bg-primary-gray"
                     // hideHandle={true}
                     isOpen={isOpen}
                     onClose={() => setIsOpen(false)}

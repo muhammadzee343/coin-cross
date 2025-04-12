@@ -57,6 +57,7 @@ import {
 import { MouseEvent, useEffect, useState } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { useRouter } from "next/navigation";
+import { useSolanaWallets } from "@privy-io/react-auth";
 
 export const useAuth = () => {
   const { login, logout, user, linkWallet, unlinkWallet, ready: privyReady } = usePrivy();
@@ -171,6 +172,13 @@ export const useAuth = () => {
     };
   };
 
+ const useExtendedPrivy = () => {
+    const { ready, wallets } = useSolanaWallets();
+    const wallet = wallets[0];
+  
+    return { ready, wallet };
+  }
+
   return {
     user,
     wallets,
@@ -183,5 +191,6 @@ export const useAuth = () => {
     getAllWallets,
     publicKey, 
     token,
+    useExtendedPrivy
   };
 };

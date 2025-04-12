@@ -3,7 +3,6 @@ import axios from "axios";
 
 const PREPARE_TRANSACTION_URL = "https://api.coin-crush.com/v1/solana/prepareTransaction";
 const SEND_SIGNED_TRANSACTION_URL = "https://api.coin-crush.com/v1/solana/sendSignedTransaction";
-const CONFIRM_TRANSACTION_URL = "https://api.coin-crush.com/v1/solana/confirmTransaction";
 
 interface TransactionState {
   preparedData: any;

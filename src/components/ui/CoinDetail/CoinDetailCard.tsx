@@ -26,18 +26,28 @@ export const CoinDetailCard: React.FC<CoinDetailProps> = ({ coin }) => {
   ];
 
   return (
-    <div className="flex flex-col pb-4 text-primary-light">
-      <Card className="bg-primary-black p-2 border-[1px] border-primary-lightGray rounded-2xl">
+    <div className="flex flex-col  text-primary-light border-primary-lightGray border-[2px] rounded-[30px]">
+      <Card className="bg-primary-black px-4 py-6 rounded-[30px]">
         <div>
           <Typography variant="h3" className="text-primary-white">
             {coin?.metadata?.name}
           </Typography>
           <Typography variant="body2" className="pt-[5px]">
-            {coin?.metadata?.name}
+            {coin?.metadata?.description}
           </Typography>
         </div>
-        {coinDetails.map(({ label, value }, index) => (
-          <div
+        {coinDetails.map(({ label, value }, index) => {
+          const isPriceChange = label === "5m" || label === "1h" || label === "24h";
+          const numericValue = typeof value === "number" ? value : parseFloat(value);
+          
+          const textColor =
+            isPriceChange && !isNaN(numericValue)
+              ? numericValue >= 0
+                ? "text-text-green"
+                : "text-text-negative"
+              : "text-primary-white";
+          return(
+            <div
             key={label}
             className={`${index === 0 ? "pt-[15px]" : "pt-[10px]"} ${
               index === coinDetails.length - 1 ? "pb-[5px]" : ""
@@ -62,19 +72,15 @@ export const CoinDetailCard: React.FC<CoinDetailProps> = ({ coin }) => {
               >
                 {label}
               </Typography>
-              <Typography
-                variant="caption1"
-                className={`text-sm ${
-                  index === 1 || index === 2 || index === 3
-                    ? "text-text-green"
-                    : ""
-                } ${abrilFatface.className}`}
+              <label
+                className={`text-[16px] text-primary-white font-futura font-medium ${textColor}`}
               >
                 {value}
-              </Typography>
+              </label>
             </div>
           </div>
-        ))}
+          )
+        })}
 
         <div className={`flex flex-row justify-between`}>
           <Typography
@@ -88,7 +94,7 @@ export const CoinDetailCard: React.FC<CoinDetailProps> = ({ coin }) => {
               href={`https://solscan.io/token/${coin?.metadata?.mintAddress}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm truncate underline ${abrilFatface.className}"
+              className="text-[16px] text-primary-white font-futura font-medium truncate underline"
             >
               {coin?.metadata?.mintAddress.length > 30
                 ?`https://solscan.io/token/${coin?.metadata?.mintAddress.slice(0, 30)}` + "..."
@@ -108,7 +114,7 @@ export const CoinDetailCard: React.FC<CoinDetailProps> = ({ coin }) => {
               href={`https://dexscreener.com/solana/${coin?.metadata?.mintAddress}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm truncate underline ${abrilFatface.className}"
+              className="text-[16px] text-primary-white font-futura font-medium truncate underline"
             >
                {"Dexxeresxd"}
             </a>

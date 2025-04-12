@@ -11,9 +11,10 @@ interface ConditionalBottomSheetsProps {
     selectedCard: CoinTypes | null;
   };
   setState: React.Dispatch<React.SetStateAction<any>>;
+  moongbagCoins: any
 }
 
-export const ConditionalBottomSheets = ({ state, setState }: ConditionalBottomSheetsProps) => {
+export const ConditionalBottomSheets = ({ state, setState, moongbagCoins }: ConditionalBottomSheetsProps) => {
   return (
     <>
       <BottomSheet
@@ -39,9 +40,9 @@ export const ConditionalBottomSheets = ({ state, setState }: ConditionalBottomSh
         onClose={() => setState((prev: any) => ({ ...prev, openDumpSliderSheet: false }))}
       >
         <ApeItAllSheet
-          mints={state.selectedCard ? [{
-            mintAddress: state.selectedCard.metadata.mintAddress || ""
-          }] : []}
+         mints={moongbagCoins.map((coin: any) => ({ 
+          mintAddress: coin.metadata.mintAddress || ""
+        }))}
           isCoinDump={true}
           setApeItAllOpen={(value) => setState((prev: any) => ({ ...prev, openDumpSliderSheet: value }))}
         />
