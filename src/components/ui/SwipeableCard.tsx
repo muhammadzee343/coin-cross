@@ -104,7 +104,7 @@ export const SwipeableCard = ({
           </div>
         )}
         
-        <div className="mt-auto space-y-2">
+        <div className="mt-auto">
           <div className="flex flex-row justify-between">
             <h4 className="text-base md:text-lg font-amalta font-normal text-primary-light leading-none">
               market cap
