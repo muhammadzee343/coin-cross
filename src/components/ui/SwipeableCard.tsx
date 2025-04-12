@@ -81,18 +81,12 @@ export const SwipeableCard = ({
           className="object-cover"
           priority
         />
-        
-        {title === "POV" && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <h1 className="text-white text-7xl md:text-8xl font-bold">POV</h1>
-          </div>
-        )}
       </div>
 
       <div className="px-4 py-5 text-primary-white flex flex-col h-1/2">
-        <h3 className="block w-full font-amalta font-normal text-3xl md:text-4xl text-center mb-4">
+        <span className="block w-full font-amalta font-normal text-[20px] md:text-[24px] text-center mb-4">
           {title === "POV" ? "You Held" : title}
-        </h3>
+        </span>
         
         {description && (
           <div className="flex-grow overflow-y-auto mb-4">
@@ -104,19 +98,19 @@ export const SwipeableCard = ({
         
         <div className="mt-auto space-y-2">
           <div className="flex flex-row justify-between">
-            <h4 className="text-base md:text-lg font-amalta font-normal text-primary-light leading-none">
+            <h4 className="text-base text-[12px] md:text-[16px] font-amalta font-normal text-primary-light leading-none">
               market cap
             </h4>
-            <p className="text-base md:text-lg font-inter font-normal text-primary-light">
+            <p className="text-base text-[12px] md:text-[16px] font-inter font-normal text-primary-light">
               {formatNumber(Number(fdvUsd))}
             </p>
           </div>
           
           <div className="flex flex-row justify-between">
-            <h4 className="text-base md:text-lg font-amalta font-normal text-primary-light leading-none">
+            <h4 className="text-base text-[12px] md:text-[16px] font-amalta font-normal text-primary-light leading-none">
               change 24h
             </h4>
-            <p className={`text-base md:text-lg font-inter font-normal leading-tight ${
+            <p className={`text-base text-[12px] md:text-[16px] font-inter font-normal leading-tight ${
               Number(marketCapChange_24h) >= 0 ? 'text-text-green' : 'text-text-negative'
             }`}>
               {marketCapChange_24h}
@@ -124,10 +118,10 @@ export const SwipeableCard = ({
           </div>
           
           <div className="flex flex-row justify-between">
-            <h4 className="text-base md:text-lg font-amalta font-normal text-primary-light leading-none">
+            <h4 className="text-base text-[12px] md:text-[16px] font-amalta font-normal text-primary-light leading-none">
               created
             </h4>
-            <p className="text-base md:text-lg font-inter font-normal text-primary-light">
+            <p className="text-base text-[12px] md:text-[16px] font-inter font-normal text-primary-light">
               {formatDateTime(coinCreated)}
             </p>
           </div>
